@@ -250,7 +250,7 @@ class ThumbnailCache {
             
             let thumbnailURL = self.pendingThumbnails[nextDocId]!.first!
             
-            let alreadyCached = self.cache.object(forKey: NSNumber(value: nextDocId)) != nil
+            let alreadyCached = self.cache[nextDocId] != nil
             
             self.loadThumbnailInBackgroundForURL(thumbnailURL, docId: nextDocId, alreadyCached: alreadyCached)
         }
@@ -274,18 +274,15 @@ class ThumbnailCache {
                  Thumbnail loading succeeded. Save the thumbnail and call the
                  reload blocks to reload the UI.
                  */
-                self.cache.setObject(scaledThumbnail!, forKey: NSNumber(value: docId))
+                self.cache[docId] = scaledThumbnail
                 
                 OperationQueue.main.addOperation {
                     self.cleanThumbnailDocumentIDs.insert(docId)
-                    
-                    // Fetch all URLs for this `documentIdentifier`, not just the provided `URL` parameter.
-                    let URLsForDocumentIdentifier = self.pendingThumbnails[docId]!
-                    
+
                     // Join the URLs for this identifier to any other URLs due for updating.
-                    self.URLsNeedingReload.formUnion(URLsForDocumentIdentifier)
-                    
-                    self.pendingThumbnails[docId] = nil
+                    // Fetch all URLs for this `documentIdentifier`, not just the provided `URL` parameter.
+                    let pending = self.pendingThumbnails.removeValue(forKey: docId) ?? []
+                    self.URLsNeedingReload.formUnion(pending)
                     
                     // Trigger the event handler for the `flushSource` updating a batch of thumbnails.
                     self.flushSource.add(data: 1)
@@ -300,7 +297,7 @@ class ThumbnailCache {
                 // Thumbnail loading failed. Just use the most recent cached thumbail.
                 if !alreadyCached {
                     let image = UIImage(named: "MissingThumbnail.png")!
-                    self.cache.setObject(image, forKey: NSNumber(value: docId))
+                    self.cache[docId] = image
                 }
                 
                 OperationQueue.main.addOperation {

@@ -121,12 +121,12 @@ class DocumentBrowserQuery: NSMetadataQuery {
         update(with: resultSet())
     }
 
-    fileprivate func computeAnimationsForNewResults(_ newResults: NSOrderedSet, old: NSOrderedSet, removed: NSOrderedSet, added: NSOrderedSet, changed: NSOrderedSet) -> [DocumentBrowserAnimation] {
+    fileprivate func computeAnimations(for newResults: NSOrderedSet, old: NSOrderedSet, removed: NSOrderedSet, added: NSOrderedSet, changed: NSOrderedSet) -> [DocumentBrowserAnimation] {
         /*
            From two sets of result objects, create an array of animations that
            should be run to morph old into new results.
         */
-        
+
         let oldResultAnimations: [DocumentBrowserAnimation] = removed.flatMap {
             old._index(of: $0).map { .delete(index: $0) }
         }
@@ -161,15 +161,14 @@ class DocumentBrowserQuery: NSMetadataQuery {
             We use the `NSOrderedSet` as a fast lookup for computing the animations,
             but use a simple array otherwise for convenience.
         */
-        let queryResults = results.array as! [NSMetadataItem]
-
         let queryAnimations: [DocumentBrowserAnimation] = previous.map {
-            self.computeAnimationsForNewResults(results, old: $0, removed: removed, added: added, changed: changed)
+            self.computeAnimations(for: results, old: $0, removed: removed, added: added, changed: changed)
         } ?? [.reload]
 
         // After computing updates, we hang on to the current results for the next round.
         previous = results
 
+        let queryResults = results.array as! [NSMetadataItem]
         OperationQueue.main.addOperation {
             self._delegate?.documentBrowserQueryResultsDidChangeWithResults(queryResults, animations: queryAnimations)
         }
