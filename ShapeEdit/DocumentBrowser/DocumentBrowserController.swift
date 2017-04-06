@@ -33,7 +33,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Properties
     
-    private var documents = [DocumentBrowserModelObject]()
+    private var documents : [NSMetadataItem] = []
     
     private var recents = [RecentModelObject]()
     
@@ -83,7 +83,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - DocumentBrowserQueryDelegate
 
-    func documentBrowserQueryResultsDidChangeWithResults(_ results: [DocumentBrowserModelObject], animations: [DocumentBrowserAnimation]) {
+    func documentBrowserQueryResultsDidChangeWithResults(_ results: [NSMetadataItem], animations: [DocumentBrowserAnimation]) {
         if animations == [.reload] {
             /*
                 Reload means we're reloading all items, so mark all thumbnails
@@ -266,9 +266,9 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Document handling support
         
-    fileprivate func documentBrowserModelObjectForURL(_ url: URL) -> DocumentBrowserModelObject? {
-        return documents.first(by: url)
-    }
+//    fileprivate func documentBrowserModelObjectForURL(_ url: URL) -> DocumentBrowserModelObject? {
+//        return documents.first(by: url)
+//    }
     
     fileprivate subscript(indexPath: IndexPath) -> ModelObject {
         if indexPath.section == DocumentBrowserController.recentsSection {
@@ -350,7 +350,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
                 do {
                     try fileManager.copyItem(at: readIntent.url, to: writeIntent.url)
                     
-                    try (writeIntent.url as NSURL).setResourceValue(true, forKey: URLResourceKey.hasHiddenExtensionKey)
+                    try (writeIntent.url as NSURL).setResourceValue(true, forKey: .hasHiddenExtensionKey)
                     
                     OperationQueue.main.addOperation {
                         self.open(writeIntent.url)

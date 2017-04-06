@@ -92,7 +92,7 @@ class ThumbnailCache {
     
     fileprivate let workerQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.workerQueue")
     
-    let thumbnailSize: CGSize
+    private let thumbnailSize: CGSize
     
     fileprivate var URLsNeedingReload = Set<URL>()
     
@@ -215,7 +215,7 @@ class ThumbnailCache {
                 // Scale the image to correct size.
                 UIGraphicsBeginImageContextWithOptions(self.thumbnailSize, false, UIScreen.main.scale)
                 
-                let thumbnailRect = CGRect(x: 0, y: 0, width: self.thumbnailSize.width, height: self.thumbnailSize.height)
+                let thumbnailRect = CGRect(origin: CGPoint(), size: self.thumbnailSize)
                 
                 thumbnail.draw(in: thumbnailRect)
                 

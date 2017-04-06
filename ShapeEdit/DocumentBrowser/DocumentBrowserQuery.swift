@@ -13,7 +13,22 @@ import UIKit
     pass the updated list of results as well as a set of animations.
 */
 protocol DocumentBrowserQueryDelegate: class {
-    func documentBrowserQueryResultsDidChangeWithResults(_ results: [DocumentBrowserModelObject], animations: [DocumentBrowserAnimation])
+    func documentBrowserQueryResultsDidChangeWithResults(_ results: [NSMetadataItem], animations: [DocumentBrowserAnimation])
+}
+
+extension NSOrderedSet {
+    @inline(__always)
+    func _index(of object: Any) -> Int? {
+        let idx = index(of: object)
+        if idx == NSNotFound {
+            return nil
+        }
+        return idx
+    }
+}
+
+class OrderedSet<Element: AnyObject> : NSOrderedSet {
+    
 }
 
 /**
@@ -45,9 +60,9 @@ class DocumentBrowserQuery: NSObject {
                 initial update.
             */
             workerQueue.addOperation {
-                guard let results = self.previousQueryObjects else { return }
-                
-                self.updateWithResults(results, removedResults: NSOrderedSet(), addedResults: NSOrderedSet(), changedResults: NSOrderedSet())
+                self.previousQueryObjects.map {
+                    self.updateWithResults($0)
+                }
             }
         }
     }
@@ -81,9 +96,9 @@ class DocumentBrowserQuery: NSObject {
 
         super.init()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.finishGathering(_:)), name: .NSMetadataQueryDidFinishGathering, object: metadataQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(finishGathering), name: .NSMetadataQueryDidFinishGathering, object: metadataQuery)
 
-        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.queryUpdated(_:)), name: .NSMetadataQueryDidUpdate, object: metadataQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated), name: .NSMetadataQueryDidUpdate, object: metadataQuery)
 
         metadataQuery.start()
     }
@@ -115,21 +130,14 @@ class DocumentBrowserQuery: NSObject {
                 
         metadataQuery.enableUpdates()
 
-        updateWithResults(results, removedResults: NSOrderedSet(), addedResults: NSOrderedSet(), changedResults: NSOrderedSet())
+        updateWithResults(results)
     }
 
     // MARK: - Result handling/animations
 
     fileprivate func buildModelObjectSet(_ objects: [NSMetadataItem]) -> NSOrderedSet {
         // Create an ordered set of model objects.
-        var array = objects.map { DocumentBrowserModelObject(item: $0) }
-
-        // Sort the array by filename.
-        array.sort { $0.displayName < $1.displayName }
-
-        let results = NSMutableOrderedSet(array: array)
-
-        return results
+        return NSOrderedSet(array: objects.sorted())
     }
     
     fileprivate func buildQueryResultSet() -> NSOrderedSet {
@@ -156,11 +164,7 @@ class DocumentBrowserQuery: NSObject {
         */
         
         let oldResultAnimations: [DocumentBrowserAnimation] = removedResults.array.flatMap { removedResult in
-            let oldIndex = oldResults.index(of: removedResult)
-            
-            guard oldIndex != NSNotFound else { return nil }
-            
-            return .delete(index: oldIndex)
+            return oldResults._index(of: removedResult).map { .delete(index: $0) }
         }
         
         let newResultAnimations: [DocumentBrowserAnimation] = addedResults.array.flatMap { addedResult in
@@ -172,29 +176,22 @@ class DocumentBrowserQuery: NSObject {
         }
 
         let movedResultAnimations: [DocumentBrowserAnimation] = changedResults.array.flatMap { movedResult in
-            let newIndex = newResults.index(of: movedResult)
-            let oldIndex = oldResults.index(of: movedResult)
-            
-            guard newIndex != NSNotFound else { return nil }
-            guard oldIndex != NSNotFound else { return nil }
-            guard oldIndex != newIndex   else { return nil }
-            
-            return .move(fromIndex: oldIndex, toIndex: newIndex)
+            if let newIndex = newResults._index(of: movedResult),
+                let oldIndex = oldResults._index(of: movedResult), oldIndex == newIndex {
+                return .move(fromIndex: oldIndex, toIndex: newIndex)
+            }
+            return nil
         }
 
         // Find all the changed result animations.
         let changedResultAnimations: [DocumentBrowserAnimation] = changedResults.array.flatMap { changedResult in
-            let index = newResults.index(of: changedResult)
-
-            guard index != NSNotFound else { return nil }
-            
-            return .update(index: index)
+            return newResults._index(of: changedResult).map { .update(index: $0) }
         }
         
         return oldResultAnimations + changedResultAnimations + newResultAnimations + movedResultAnimations
     }
 
-    fileprivate func updateWithResults(_ results: NSOrderedSet, removedResults: NSOrderedSet, addedResults: NSOrderedSet, changedResults: NSOrderedSet) {
+    fileprivate func updateWithResults(_ results: NSOrderedSet = [], removedResults: NSOrderedSet = [], addedResults: NSOrderedSet = [], changedResults: NSOrderedSet = []) {
         /*
             From a set of new result objects, we compute the necessary animations
             if applicable, then call out to our delegate.
@@ -204,7 +201,7 @@ class DocumentBrowserQuery: NSObject {
             We use the `NSOrderedSet` as a fast lookup for computing the animations,
             but use a simple array otherwise for convenience.
         */
-        let queryResults = results.array as! [DocumentBrowserModelObject]
+        let queryResults = results.array as! [NSMetadataItem]
 
         let queryAnimations: [DocumentBrowserAnimation]
 

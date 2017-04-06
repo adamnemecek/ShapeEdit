@@ -17,9 +17,23 @@ protocol RecentModelObjectDelegate: class {
     func recentNeedsReload(_ recent: RecentModelObject)
 }
 
+extension NSURL {
+    func promisedItemResource<T : AnyObject>(for key: URLResourceKey) -> T?{
+        var ret: AnyObject? = nil
+        guard let _ = try? getPromisedItemResourceValue(&ret, forKey: key) else {
+            return nil
+        }
+        return ret as? T
+    }
+}
+
 extension URL {
     init() {
         self = NSURL() as URL
+    }
+    
+    func promisedItemResource<T : AnyObject>(for key: URLResourceKey) -> T?{
+        return (self as NSURL).promisedItemResource(for: key)
     }
 }
 

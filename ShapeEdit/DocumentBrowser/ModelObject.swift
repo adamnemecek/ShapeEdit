@@ -8,7 +8,7 @@
 import Foundation
 
 /// The base protocol for all collection view objects to display in our UI.
-protocol ModelObject: class {
+public protocol ModelObject: class {
     var displayName: String { get }
     
     var subtitle: String { get }
@@ -32,10 +32,9 @@ enum DocumentBrowserAnimation {
     We need to implement the `Equatable` protocol on our animation objects so we
     can match them later.
 */
-extension DocumentBrowserAnimation: Equatable { }
-
-func ==(lhs: DocumentBrowserAnimation, rhs: DocumentBrowserAnimation) -> Bool {
-    switch (lhs, rhs) {
+extension DocumentBrowserAnimation: Equatable {
+    static func ==(lhs: DocumentBrowserAnimation, rhs: DocumentBrowserAnimation) -> Bool {
+        switch (lhs, rhs) {
         case (.reload, .reload):
             return true
             
@@ -53,6 +52,7 @@ func ==(lhs: DocumentBrowserAnimation, rhs: DocumentBrowserAnimation) -> Bool {
             
         default:
             return false
+        }
     }
 }
 
