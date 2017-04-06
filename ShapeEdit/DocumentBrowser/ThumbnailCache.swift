@@ -130,7 +130,25 @@ extension NSURL {
             return nil
         }
     }
+    
+    // MARK: - Thumbnail Loading
+    var docId: Int? {
+        // Look up the document identifier on the URL which uniquely identifies a document.
+
+        var i: AnyObject?
+        if let _ = try? getPromisedItemResourceValue(&i, forKey: .documentIdentifierKey) {
+            return i as? Int
+        }
+        return nil
+    }
 }
+
+extension URL {
+    var docId: Int? {
+        return (self as NSURL).docId
+    }
+}
+
 
 class ThumbnailCache {
     // MARK: - Properties
@@ -155,7 +173,7 @@ class ThumbnailCache {
     
     fileprivate var flushSource: DispatchSource
     
-    weak var delegate: ThumbnailCacheDelegate?
+    weak var _delegate: ThumbnailCacheDelegate?
     
     static let concurrentThumbnailOperations = 4
     
@@ -181,7 +199,7 @@ class ThumbnailCache {
         flushSource.setEventHandler { [weak self] in
             guard let strongSelf = self else { return }
             
-            strongSelf.delegate?.thumbnailCache(strongSelf, didLoadThumbnailsForURLs: strongSelf.URLsNeedingReload)
+            strongSelf._delegate?.thumbnailCache(strongSelf, didLoadThumbnailsForURLs: strongSelf.URLsNeedingReload)
             strongSelf.URLsNeedingReload.removeAll()
         }
         
@@ -200,7 +218,7 @@ class ThumbnailCache {
          Mark the item dirty so that we know the next time we are asked for the
          thumbnail that we need to reload it.
          */
-        _ = self[url].map {
+        _ = url.docId.map {
             self.cleanThumbnailDocumentIDs.remove($0)
         }
     }
@@ -210,34 +228,20 @@ class ThumbnailCache {
          Remove the item entirely from the cache because the item existing in the cache no
          longer makes sense for that URL.
          */
-        _ = self[url].map {
+        _ = url.docId.map {
             self.cache.removeObject(forKey: NSNumber(value: $0))
             self.cleanThumbnailDocumentIDs.remove($0)
         }
     }
     
     func cancelThumbnailLoadForURL(_ url: URL) {
-        _ = self[url].map { id in
+        _ = url.docId.map { id in
             _ = self.unscheduledDocumentIDs.remove(id).map { _ in
                 self.pendingThumbnails[id] = nil
             }
         }
     }
-    
-    
-    // MARK: - Thumbnail Loading
-    fileprivate subscript(url: URL) -> Int? {
-        // Look up the document identifier on the URL which uniquely identifies a document.
-        do {
-            var docId: AnyObject?
-            try (url as NSURL).getPromisedItemResourceValue(&docId, forKey: URLResourceKey.documentIdentifierKey)
-            
-            return docId as? Int
-        }
-        catch {
-            return nil
-        }
-    }
+
     
     fileprivate func scheduleThumbnailLoading() {
         // While we have work left to schedule, schedule a thumbnail fetch in the background
@@ -326,7 +330,7 @@ class ThumbnailCache {
          We cache everything in our thumbnail cache by document identifier which
          is tracked properly accross renames.
          */
-        guard let docId = self[url] else {
+        guard let docId = url.docId else {
             print("Failed to load docID and will display placeholder image for \(url)")
             
             return UIImage(named: "MissingThumbnail.png")!

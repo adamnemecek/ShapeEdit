@@ -51,7 +51,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         // Initialize ourself as the delegate of our created queries.
         browserQuery._delegate = self
 
-        thumbnailCache.delegate = self
+        thumbnailCache._delegate = self
         
         recentsManager.delegate = self
         
