@@ -27,6 +27,13 @@ extension NSOrderedSet {
     }
 }
 
+extension Notification {
+    subscript (metadata forKey: String) -> NSOrderedSet {
+        let meta = userInfo?[forKey] as? [NSMetadataItem] ?? []
+        return NSOrderedSet(array: meta.sorted())
+    }
+}
+
 //
 //class OrderedSet<Element : NSMetadataItem> : NSOrderedSet {
 //    init(sort content: [Element]) {
@@ -110,15 +117,9 @@ class DocumentBrowserQuery: NSObject {
     // MARK: - Notifications
 
     @objc func queryUpdated(_ notification: Notification) {
-        let changedMetadataItems = notification.userInfo?[NSMetadataQueryUpdateChangedItemsKey] as? [NSMetadataItem]
-        
-        let removedMetadataItems = notification.userInfo?[NSMetadataQueryUpdateRemovedItemsKey] as? [NSMetadataItem]
-        
-        let addedMetadataItems = notification.userInfo?[NSMetadataQueryUpdateAddedItemsKey] as? [NSMetadataItem]
-        
-        let changedResults = buildModelObjectSet(changedMetadataItems ?? [])
-        let removedResults = buildModelObjectSet(removedMetadataItems ?? [])
-        let addedResults = buildModelObjectSet(addedMetadataItems ?? [])
+        let changedResults = notification[metadata: NSMetadataQueryUpdateChangedItemsKey]
+        let removedResults = notification[metadata: NSMetadataQueryUpdateRemovedItemsKey]
+        let addedResults = notification[metadata: NSMetadataQueryUpdateAddedItemsKey]
         
         let newResults = buildQueryResultSet()
 
