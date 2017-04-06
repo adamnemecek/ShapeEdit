@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		373284CA1E95CAEA006704EF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373284C91E95CAEA006704EF /* Extensions.swift */; };
 		5516988D1AEC28F800D573F6 /* Template.shapeFile in Resources */ = {isa = PBXBuildFile; fileRef = 5516988C1AEC28F800D573F6 /* Template.shapeFile */; };
 		5521CF181B1F7BB400A88524 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5521CF171B1F7BB400A88524 /* Main.storyboard */; };
 		553992F11AEC10FF006433D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553992F01AEC10FF006433D4 /* AppDelegate.swift */; };
@@ -27,6 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		373284C91E95CAEA006704EF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extensions.swift; path = DocumentEditor/Extensions.swift; sourceTree = "<group>"; };
 		4D4E8CBC1B18DF910038CE04 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		5515A0D51AEEBB27001184EF /* ShapeEdit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = ShapeEdit.entitlements; sourceTree = "<group>"; };
 		5516988C1AEC28F800D573F6 /* Template.shapeFile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Template.shapeFile; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				72A6789C1B1FE84C00C96B59 /* DocumentViewController.swift */,
+				373284C91E95CAEA006704EF /* Extensions.swift */,
 				72A6789D1B1FE84C00C96B59 /* ShapeDocument.swift */,
 				72A6789E1B1FE84C00C96B59 /* ShapeView.swift */,
 			);
@@ -219,6 +222,7 @@
 				72A678A01B1FE84C00C96B59 /* ShapeDocument.swift in Sources */,
 				72A678A81B1FE85500C96B59 /* DocumentBrowserQuery.swift in Sources */,
 				553992F11AEC10FF006433D4 /* AppDelegate.swift in Sources */,
+				373284CA1E95CAEA006704EF /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
