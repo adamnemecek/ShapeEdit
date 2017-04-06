@@ -74,8 +74,8 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
                 return
             }
             
-            let loadedRecents = loadedRecentData.flatMap { recentModelObjectData in
-                return NSKeyedUnarchiver.unarchiveObject(with: recentModelObjectData) as? RecentModelObject
+            let loadedRecents = loadedRecentData.flatMap {
+                return NSKeyedUnarchiver.unarchiveObject(with: $0) as? RecentModelObject
             }
             
             // Remove any existing recents we may have already stored in memory.
@@ -126,22 +126,19 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
             Remove the recent from the array and save the recents array to disk
             so they will reflect the correct state when the app is relaunched.
         */
-        guard let index = recentModelObjects.index(of: recent) else { return }
-
-        recentModelObjects.remove(at: index)
+        guard let _ = recentModelObjects.remove(recent) else { return }
 
         saveRecents()
     }
     
-    func addURLToRecents(_ URL: Foundation.URL) {
+    func addURLToRecents(_ url: Foundation.URL) {
         workerQueue.addOperation {
             // Add the recent to the recents manager.
-            guard let recent = RecentModelObject(URL: URL) else { return }
+            guard let recent = RecentModelObject(url: url) else { return }
 
             var animations = [DocumentBrowserAnimation]()
             
-            if let index = self.recentModelObjects.index(of: recent) {
-                self.recentModelObjects.remove(at: index)
+            if let index = self.recentModelObjects.remove(recent) {
                 
                 if index != 0 {
                     animations += [.move(fromIndex: index, toIndex: 0)]

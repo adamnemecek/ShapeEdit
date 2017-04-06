@@ -361,8 +361,8 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Document Opening
     
-    func documentWasOpenedSuccessfullyAtURL(_ URL: Foundation.url) {
-        recentsManager.addURLToRecents(URL)
+    func documentWasOpenedSuccessfullyAtURL(_ url: Foundation.URL) {
+        recentsManager.addURLToRecents(url)
     }
     
     func openDocumentAtURL(_ url: URL) {

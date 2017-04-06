@@ -17,6 +17,12 @@ protocol RecentModelObjectDelegate: class {
     func recentNeedsReload(_ recent: RecentModelObject)
 }
 
+extension URL {
+    init() {
+        self = NSURL() as URL
+    }
+}
+
 /**
     The `RecentModelObject` manages a single recent on disk.  It is registered
     as a file presenter and as such is notified when the recent changes on
@@ -85,9 +91,9 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
                 throw ShapeEditError.bookmarkResolveFailed
             }
             
-            bookmarkData = bookmark as NSData
+            bookmarkData = bookmark as Data
             
-            url = try (NSURL(resolvingBookmarkData: bookmark, options: .withoutUI, relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale) as URL)
+            url = try (NSURL(resolvingBookmarkData: bookmarkData!, options: .withoutUI, relativeTo: nil, bookmarkDataIsStale: &bookmarkDataIsStale) as URL)
             
             /*
                 The URL is security-scoped for external documents, which live outside
