@@ -18,11 +18,10 @@ class ShapeView: SCNView {
 
     var document: ShapeDocument? {
         didSet {
-            guard let document = document else { return }
-
-            document.setSceneOnRenderer(self)
-            
-            self.backgroundColor = document.backgroundColor
+            document.map {
+                $0.setSceneOnRenderer(self)
+                self.backgroundColor = $0.backgroundColor
+            }
         }
     }
 
@@ -41,8 +40,7 @@ class ShapeView: SCNView {
             document that changes happened so that it writes the new document
             state to disk.
         */
-        guard let pointOfView = pointOfView else { return }
 
-        document?.updateCameraState(pointOfView)
+        pointOfView.map { self.document?.updateCameraState($0) }
     }
 }

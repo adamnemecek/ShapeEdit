@@ -261,20 +261,17 @@ class ThumbnailCache {
             if let thumbnail = (url as NSURL).thumbNailFromDisk {
                 // Scale the image to correct size.
                 UIGraphicsBeginImageContextWithOptions(self.thumbnailSize, false, UIScreen.main.scale)
-                
-                let thumbnailRect = CGRect(origin: CGPoint(), size: self.thumbnailSize)
-                
-                thumbnail.draw(in: thumbnailRect)
-                
-                let scaledThumbnail = UIGraphicsGetImageFromCurrentImageContext()
-                
-                UIGraphicsEndImageContext()
-                
+
+                thumbnail.draw(in: CGRect(origin: CGPoint(), size: self.thumbnailSize))
+
                 /*
                  Thumbnail loading succeeded. Save the thumbnail and call the
                  reload blocks to reload the UI.
                  */
-                self.cache[docId] = scaledThumbnail
+
+                self.cache[docId] = UIGraphicsGetImageFromCurrentImageContext()
+                
+                UIGraphicsEndImageContext()
                 
                 OperationQueue.main.addOperation {
                     self.cleanThumbnailDocumentIDs.insert(docId)

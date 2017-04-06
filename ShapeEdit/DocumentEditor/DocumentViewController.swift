@@ -71,15 +71,12 @@ class DocumentViewController: UIViewController {
                 ctrl.documentWasOpenedSuccessfullyAtURL(self.document.fileURL)
             }
             else {
-                let title = self.title!
+                let alert = UIAlertController(title: "Unable to Load \"\(self.title!)\"",
+                                              message: "Opening the document failed", preferredStyle: .alert)
 
-                let alert = UIAlertController(title: "Unable to Load \"\(title)\"", message: "Opening the document failed", preferredStyle: .alert)
-
-                let alertAction = UIAlertAction(title: "Dismiss", style: .default) { action in
+                alert.addAction(UIAlertAction(title: "Dismiss", style: .default) { _ in
                     self.navigationController?.popToRootViewController(animated: true)
-                }
-                
-                alert.addAction(alertAction)
+                })
                     
                 self.present(alert, animated: true, completion: nil)
             }
@@ -100,12 +97,11 @@ class DocumentViewController: UIViewController {
     }
     
     fileprivate var segmentedControllerTintColor: UIColor {
-        let originalColor = document.color
         
         var red:   CGFloat = 0
         var green: CGFloat = 0
         var blue:  CGFloat = 0
-        originalColor.getRed(&red, green: &green, blue: &blue, alpha: nil)
+        document.color.getRed(&red, green: &green, blue: &blue, alpha: nil)
         
         return UIColor(red: red * 0.7, green: green * 0.7, blue: blue * 0.7, alpha: 1)
     }
