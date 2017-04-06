@@ -49,7 +49,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     override func awakeFromNib() {
         // Initialize ourself as the delegate of our created queries.
-        browserQuery.delegate = self
+        browserQuery._delegate = self
 
         thumbnailCache.delegate = self
         

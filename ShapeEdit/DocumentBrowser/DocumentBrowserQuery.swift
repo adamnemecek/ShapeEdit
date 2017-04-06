@@ -53,16 +53,16 @@ extension NSMetadataQuery {
     queueing and animation concerns. It runs the query and computes animations
     from the results set.
 */
-class DocumentBrowserQuery: NSObject {
+class DocumentBrowserQuery: NSMetadataQuery {
     // MARK: - Properties
 
-    fileprivate var metadataQuery: NSMetadataQuery
+//    fileprivate var metadataQuery: NSMetadataQuery
     
     fileprivate var previousQueryObjects: NSOrderedSet?
     
     fileprivate let workerQueue = OperationQueue(name: .browser)
 
-    var delegate: DocumentBrowserQueryDelegate? {
+    var _delegate: DocumentBrowserQueryDelegate? {
         didSet {
             /*
                 If we already have results, we send them to the delegate as an
@@ -79,11 +79,11 @@ class DocumentBrowserQuery: NSObject {
     // MARK: - Initialization
 
     override init() {
-        metadataQuery = NSMetadataQuery()
+        super.init()
         
         // Filter only our document type.
         let filePattern = String(format: "*.%@", DocumentBrowserController.documentExtension)
-        metadataQuery.predicate = NSPredicate(format: "%K LIKE %@", NSMetadataItemFSNameKey, filePattern)
+        self.predicate = NSPredicate(format: "%K LIKE %@", NSMetadataItemFSNameKey, filePattern)
         
         /*
             Ask for both in-container documents and external documents so that
@@ -91,7 +91,7 @@ class DocumentBrowserQuery: NSObject {
             opened in the application, without having to pull the document picker
             again and again.
         */
-        metadataQuery.searchScopes = [
+        self.searchScopes = [
             NSMetadataQueryUbiquitousDocumentsScope,
             NSMetadataQueryAccessibleUbiquitousExternalDocumentsScope
         ]
@@ -101,28 +101,26 @@ class DocumentBrowserQuery: NSObject {
             can perform our own background work in sync with item discovery.
             Note that the operationQueue of the `NSMetadataQuery` must be serial.
         */
-        metadataQuery.operationQueue = workerQueue
+        self.operationQueue = workerQueue
 
-        super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(finishGathering), name: .NSMetadataQueryDidFinishGathering, object: nil)
 
-        NotificationCenter.default.addObserver(self, selector: #selector(finishGathering), name: .NSMetadataQueryDidFinishGathering, object: metadataQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated), name: .NSMetadataQueryDidUpdate, object: nil)
 
-        NotificationCenter.default.addObserver(self, selector: #selector(queryUpdated), name: .NSMetadataQueryDidUpdate, object: metadataQuery)
-
-        metadataQuery.start()
+        start()
     }
     
     // MARK: - Notifications
 
     @objc func queryUpdated(_ notification: Notification) {
-        updateWithResults(metadataQuery.resultSet(),
+        updateWithResults(resultSet(),
                           removedResults: notification[metadata: NSMetadataQueryUpdateRemovedItemsKey],
                           addedResults: notification[metadata: NSMetadataQueryUpdateAddedItemsKey],
                           changedResults: notification[metadata: NSMetadataQueryUpdateChangedItemsKey])
     }
 
     @objc func finishGathering(_ notification: Notification) {
-        updateWithResults(metadataQuery.resultSet())
+        updateWithResults(resultSet())
     }
 
     fileprivate func computeAnimationsForNewResults(_ newResults: NSOrderedSet, oldResults: NSOrderedSet, removedResults: NSOrderedSet, addedResults: NSOrderedSet, changedResults: NSOrderedSet) -> [DocumentBrowserAnimation] {
@@ -180,7 +178,7 @@ class DocumentBrowserQuery: NSObject {
         previousQueryObjects = results
 
         OperationQueue.main.addOperation {
-            self.delegate?.documentBrowserQueryResultsDidChangeWithResults(queryResults, animations: queryAnimations)
+            self._delegate?.documentBrowserQueryResultsDidChangeWithResults(queryResults, animations: queryAnimations)
         }
     }
 }
