@@ -19,7 +19,7 @@
 		72A678A01B1FE84C00C96B59 /* ShapeDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A6789D1B1FE84C00C96B59 /* ShapeDocument.swift */; };
 		72A678A11B1FE84C00C96B59 /* ShapeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A6789E1B1FE84C00C96B59 /* ShapeView.swift */; };
 		72A678A61B1FE85500C96B59 /* DocumentBrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A678A21B1FE85500C96B59 /* DocumentBrowserController.swift */; };
-		72A678A71B1FE85500C96B59 /* DocumentBrowserModelObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A678A31B1FE85500C96B59 /* DocumentBrowserModelObject.swift */; };
+		72A678A71B1FE85500C96B59 /* NSMetadataItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A678A31B1FE85500C96B59 /* NSMetadataItem.swift */; };
 		72A678A81B1FE85500C96B59 /* DocumentBrowserQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A678A41B1FE85500C96B59 /* DocumentBrowserQuery.swift */; };
 		72A678A91B1FE85500C96B59 /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A678A51B1FE85500C96B59 /* ThumbnailCache.swift */; };
 		72D7EBA91B2015650036B9B1 /* RecentModelObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D7EBA81B2015650036B9B1 /* RecentModelObject.swift */; };
@@ -44,7 +44,7 @@
 		72A6789D1B1FE84C00C96B59 /* ShapeDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ShapeDocument.swift; path = DocumentEditor/ShapeDocument.swift; sourceTree = "<group>"; };
 		72A6789E1B1FE84C00C96B59 /* ShapeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ShapeView.swift; path = DocumentEditor/ShapeView.swift; sourceTree = "<group>"; };
 		72A678A21B1FE85500C96B59 /* DocumentBrowserController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DocumentBrowserController.swift; path = DocumentBrowser/DocumentBrowserController.swift; sourceTree = "<group>"; };
-		72A678A31B1FE85500C96B59 /* DocumentBrowserModelObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DocumentBrowserModelObject.swift; path = DocumentBrowser/DocumentBrowserModelObject.swift; sourceTree = "<group>"; };
+		72A678A31B1FE85500C96B59 /* NSMetadataItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NSMetadataItem.swift; path = DocumentBrowser/NSMetadataItem.swift; sourceTree = "<group>"; };
 		72A678A41B1FE85500C96B59 /* DocumentBrowserQuery.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DocumentBrowserQuery.swift; path = DocumentBrowser/DocumentBrowserQuery.swift; sourceTree = "<group>"; };
 		72A678A51B1FE85500C96B59 /* ThumbnailCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ThumbnailCache.swift; path = DocumentBrowser/ThumbnailCache.swift; sourceTree = "<group>"; };
 		72D7EBA81B2015650036B9B1 /* RecentModelObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RecentModelObject.swift; path = DocumentBrowser/RecentModelObject.swift; sourceTree = "<group>"; };
@@ -111,7 +111,7 @@
 				72D7EBAC1B2020A10036B9B1 /* ModelObject.swift */,
 				72D7EBA81B2015650036B9B1 /* RecentModelObject.swift */,
 				72D7EBAA1B20163B0036B9B1 /* RecentModelObjectsManager.swift */,
-				72A678A31B1FE85500C96B59 /* DocumentBrowserModelObject.swift */,
+				72A678A31B1FE85500C96B59 /* NSMetadataItem.swift */,
 				72A678A41B1FE85500C96B59 /* DocumentBrowserQuery.swift */,
 				7264FF1C1B204DE10039767C /* DocumentBrowserViews.swift */,
 				72A678A21B1FE85500C96B59 /* DocumentBrowserController.swift */,
@@ -211,7 +211,7 @@
 			files = (
 				7264FF1D1B204DE10039767C /* DocumentBrowserViews.swift in Sources */,
 				72A678A11B1FE84C00C96B59 /* ShapeView.swift in Sources */,
-				72A678A71B1FE85500C96B59 /* DocumentBrowserModelObject.swift in Sources */,
+				72A678A71B1FE85500C96B59 /* NSMetadataItem.swift in Sources */,
 				72A678A91B1FE85500C96B59 /* ThumbnailCache.swift in Sources */,
 				72D7EBA91B2015650036B9B1 /* RecentModelObject.swift in Sources */,
 				72D7EBAD1B2020A10036B9B1 /* ModelObject.swift in Sources */,

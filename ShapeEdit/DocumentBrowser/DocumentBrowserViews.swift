@@ -57,9 +57,12 @@ class DocumentCell: UICollectionViewCell {
 class HeaderView : UICollectionReusableView {
     @IBOutlet var label: UILabel!
     
-    var title = "" {
-        didSet {
-            label.text = title
+    var title : String {
+        get {
+            return label.text ?? ""
+        }
+        set {
+            label.text = newValue
         }
     }
     
