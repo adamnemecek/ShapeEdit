@@ -91,8 +91,46 @@ class ThumbNailCache : NSCache<NSNumber, UIImage> {
         self.name = "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache"
         self.countLimit = 64
     }
+    
+    subscript(index: Int) -> UIImage? {
+        get {
+            return object(forKey: NSNumber(value: index))
+        }
+        set {
+            newValue.map {self.setObject($0, forKey: NSNumber(value: index)) }
+        }
+    }
 }
 
+extension NSURL {
+    var thumbNailFromDisk : UIImage? {
+        do {
+            /*
+             Load the thumbnail from disk.  Use getPromisedItemResourceValue because
+             the document might not have been downloaded yet.
+             */
+            var thumbnailDictionary: AnyObject?
+            try getPromisedItemResourceValue(&thumbnailDictionary, forKey: URLResourceKey.thumbnailDictionaryKey)
+            
+            /*
+             We don't want to hang onto this in the URL cache because the URL
+             is long running and we maintain a separate cache for the thumbnails.
+             */
+            removeCachedResourceValue(forKey: URLResourceKey.thumbnailDictionaryKey)
+            
+            guard let dictionary = thumbnailDictionary as? [String: UIImage],
+                
+                let image = dictionary[URLThumbnailDictionaryItem.NSThumbnail1024x1024SizeKey.rawValue] else {
+                    throw ShapeEditError.thumbnailLoadFailed
+            }
+            
+            return image
+        }
+        catch {
+            return nil
+        }
+    }
+}
 
 class ThumbnailCache {
     // MARK: - Properties
@@ -191,10 +229,10 @@ class ThumbnailCache {
     fileprivate subscript(url: URL) -> Int? {
         // Look up the document identifier on the URL which uniquely identifies a document.
         do {
-            var documentIdentifier: AnyObject?
-            try (url as NSURL).getPromisedItemResourceValue(&documentIdentifier, forKey: URLResourceKey.documentIdentifierKey)
+            var docId: AnyObject?
+            try (url as NSURL).getPromisedItemResourceValue(&docId, forKey: URLResourceKey.documentIdentifierKey)
             
-            return documentIdentifier as? Int
+            return docId as? Int
         }
         catch {
             return nil
@@ -204,23 +242,23 @@ class ThumbnailCache {
     fileprivate func scheduleThumbnailLoading() {
         // While we have work left to schedule, schedule a thumbnail fetch in the background
         while self.runningDocumentIDCount < ThumbnailCache.concurrentThumbnailOperations {
-            guard let nextDocumentID = self.unscheduledDocumentIDs.first else { break }
+            guard let nextDocId = self.unscheduledDocumentIDs.first else { break }
             
-            self.unscheduledDocumentIDs.remove(nextDocumentID)
+            self.unscheduledDocumentIDs.remove(nextDocId)
             
             self.runningDocumentIDCount += 1
             
-            let thumbnailURL = self.pendingThumbnails[nextDocumentID]!.first!
+            let thumbnailURL = self.pendingThumbnails[nextDocId]!.first!
             
-            let alreadyCached = self.cache.object(forKey: NSNumber(value: nextDocumentID)) != nil
+            let alreadyCached = self.cache.object(forKey: NSNumber(value: nextDocId)) != nil
             
-            self.loadThumbnailInBackgroundForURL(thumbnailURL, documentIdentifier: nextDocumentID, alreadyCached: alreadyCached)
+            self.loadThumbnailInBackgroundForURL(thumbnailURL, docId: nextDocId, alreadyCached: alreadyCached)
         }
     }
     
-    fileprivate func loadThumbnailInBackgroundForURL(_ url: URL, documentIdentifier: Int, alreadyCached: Bool) {
+    fileprivate func loadThumbnailInBackgroundForURL(_ url: URL, docId: Int, alreadyCached: Bool) {
         self.workerQueue.addOperation {
-            if let thumbnail = self.loadThumbnailFromDiskForURL(url) {
+            if let thumbnail = (url as NSURL).thumbNailFromDisk {
                 // Scale the image to correct size.
                 UIGraphicsBeginImageContextWithOptions(self.thumbnailSize, false, UIScreen.main.scale)
                 
@@ -236,18 +274,18 @@ class ThumbnailCache {
                  Thumbnail loading succeeded. Save the thumbnail and call the
                  reload blocks to reload the UI.
                  */
-                self.cache.setObject(scaledThumbnail!, forKey: NSNumber(value: documentIdentifier))
+                self.cache.setObject(scaledThumbnail!, forKey: NSNumber(value: docId))
                 
                 OperationQueue.main.addOperation {
-                    self.cleanThumbnailDocumentIDs.insert(documentIdentifier)
+                    self.cleanThumbnailDocumentIDs.insert(docId)
                     
                     // Fetch all URLs for this `documentIdentifier`, not just the provided `URL` parameter.
-                    let URLsForDocumentIdentifier = self.pendingThumbnails[documentIdentifier]!
+                    let URLsForDocumentIdentifier = self.pendingThumbnails[docId]!
                     
                     // Join the URLs for this identifier to any other URLs due for updating.
                     self.URLsNeedingReload.formUnion(URLsForDocumentIdentifier)
                     
-                    self.pendingThumbnails[documentIdentifier] = nil
+                    self.pendingThumbnails[docId] = nil
                     
                     // Trigger the event handler for the `flushSource` updating a batch of thumbnails.
                     self.flushSource.add(data: 1)
@@ -262,13 +300,13 @@ class ThumbnailCache {
                 // Thumbnail loading failed. Just use the most recent cached thumbail.
                 if !alreadyCached {
                     let image = UIImage(named: "MissingThumbnail.png")!
-                    self.cache.setObject(image, forKey: NSNumber(value: documentIdentifier))
+                    self.cache.setObject(image, forKey: NSNumber(value: docId))
                 }
                 
                 OperationQueue.main.addOperation {
-                    self.cleanThumbnailDocumentIDs.insert(documentIdentifier)
+                    self.cleanThumbnailDocumentIDs.insert(docId)
                     
-                    self.pendingThumbnails[documentIdentifier] = nil
+                    self.pendingThumbnails[docId] = nil
                     
                     self.runningDocumentIDCount -= 1
                     
@@ -279,7 +317,7 @@ class ThumbnailCache {
         }
     }
     
-    func loadThumbnailForURL(_ url: URL) -> UIImage {
+    func loadThumbnail(for url: URL) -> UIImage {
         /*
          We load the existing thumbnail (or a placeholder image if none has been
          loaded yet) and check if it is clean or not. If it isn't clean, we
@@ -294,66 +332,37 @@ class ThumbnailCache {
          We cache everything in our thumbnail cache by document identifier which
          is tracked properly accross renames.
          */
-        guard let documentIdentifier = self[url] else {
+        guard let docId = self[url] else {
             print("Failed to load docID and will display placeholder image for \(url)")
             
             return UIImage(named: "MissingThumbnail.png")!
         }
-        
-        let existingImage = cache.object(forKey: NSNumber(value: documentIdentifier))
-        
-        if let existingImage = existingImage, cleanThumbnailDocumentIDs.contains(documentIdentifier) {
+
+        let img = cache[docId]
+        if let img = img, cleanThumbnailDocumentIDs.contains(docId) {
             // Everything fully up-to-date - return the cached image.
-            return existingImage
+            return img
         }
         
         // Use a placeholder image if one hasn't been loaded yet.
-        let loadedThumbnail = existingImage ?? UIImage(named: "MissingThumbnail.png")!
+        let loadedThumbnail = img ?? UIImage(named: "MissingThumbnail.png")!
         
         // If we are already loading that thumbnail, add our url to the reload list.
-        if let URLs = pendingThumbnails[documentIdentifier] {
-            pendingThumbnails[documentIdentifier] = URLs.union([url])
+        if let URLs = pendingThumbnails[docId] {
+            pendingThumbnails[docId] = URLs.union([url])
             
             return loadedThumbnail
         }
         
         // Schedule the thumbnail to be loaded on a background queue.
-        pendingThumbnails[documentIdentifier] = [url]
+        pendingThumbnails[docId] = [url]
         
-        unscheduledDocumentIDs += [documentIdentifier]
+        unscheduledDocumentIDs += [docId]
         
         // Trigger the event handler for the `scheduleSource` scheduling thumbnail loading.
         scheduleSource.add(data: 1)
         
         // Return the most up-to-date image we have currently.
         return loadedThumbnail
-    }
-    
-    fileprivate func loadThumbnailFromDiskForURL(_ url: URL) -> UIImage? {
-        do {
-            /*
-             Load the thumbnail from disk.  Use getPromisedItemResourceValue because
-             the document might not have been downloaded yet.
-             */
-            var thumbnailDictionary: AnyObject?
-            try (url as NSURL).getPromisedItemResourceValue(&thumbnailDictionary, forKey: URLResourceKey.thumbnailDictionaryKey)
-            
-            /*
-             We don't want to hang onto this in the URL cache because the URL
-             is long running and we maintain a separate cache for the thumbnails.
-             */
-            (url as NSURL).removeCachedResourceValue(forKey: URLResourceKey.thumbnailDictionaryKey)
-            
-            guard let dictionary = thumbnailDictionary as? [String: UIImage],
-                
-                let image = dictionary[URLThumbnailDictionaryItem.NSThumbnail1024x1024SizeKey.rawValue] else {
-                    throw ShapeEditError.thumbnailLoadFailed
-            }
-            
-            return image
-        }
-        catch {
-            return nil
-        }
     }
 }

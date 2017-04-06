@@ -227,7 +227,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         cell.title = document.displayName
         cell.subtitle = document.subtitle
         
-        cell.thumbnail = thumbnailCache.loadThumbnailForURL(document.url)
+        cell.thumbnail = thumbnailCache.loadThumbnail(for: document.url)
         
         return cell
     }
