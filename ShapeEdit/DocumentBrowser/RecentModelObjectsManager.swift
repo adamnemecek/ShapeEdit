@@ -171,9 +171,8 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     func recentWasDeleted(_ recent: RecentModelObject) {
         self.workerQueue.addOperation {
-            guard let index = self.content.index(of: recent) else { return }
             
-            self.remove(recent)
+            guard let index = self.content.remove(recent) else { return }
             
             OperationQueue.main.addOperation {
                 self.delegate?.recentsManagerResultsDidChange(self.content, animations: [
