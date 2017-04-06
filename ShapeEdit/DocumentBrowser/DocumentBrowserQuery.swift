@@ -56,8 +56,6 @@ extension NSMetadataQuery {
 class DocumentBrowserQuery: NSMetadataQuery {
     // MARK: - Properties
 
-//    fileprivate var metadataQuery: NSMetadataQuery
-    
     fileprivate var previousQueryObjects: NSOrderedSet?
     
     fileprivate let workerQueue = OperationQueue(name: .browser)
