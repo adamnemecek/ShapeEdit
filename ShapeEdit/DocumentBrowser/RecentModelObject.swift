@@ -33,7 +33,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
 
     weak var delegate: RecentModelObjectDelegate?
     
-    fileprivate(set) var url: Foundation.URL
+    fileprivate(set) var url: URL
     
     fileprivate(set) var displayName = ""
     
@@ -49,7 +49,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
     static let subtitleKey = "subtitle"
     static let bookmarkKey = "bookmark"
 
-    var presentedItemURL: Foundation.URL? {
+    var presentedItemURL: URL? {
         return url
     }
 
@@ -63,7 +63,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
 
     // MARK: - NSCoding
     
-    required init?(url: Foundation.URL) {
+    required init?(url: URL) {
         self.url = url
         
         do {

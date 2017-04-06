@@ -129,7 +129,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
         saveRecents()
     }
     
-    func add(_ url: Foundation.URL) {
+    func add(_ url: URL) {
         workerQueue.addOperation {
             // Add the recent to the recents manager.
             guard let recent = RecentModelObject(url: url) else { return }

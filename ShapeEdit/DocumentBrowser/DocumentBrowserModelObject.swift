@@ -47,7 +47,7 @@ class DocumentBrowserModelObject: NSObject, ModelObject {
             If the item is renamed or moved, the value for `NSMetadataItemURLKey`
             might change.
         */
-        url = item.value(forAttribute: NSMetadataItemURLKey) as! Foundation.URL
+        url = item.value(forAttribute: NSMetadataItemURLKey) as! URL
         
         metadataItem = item
     }

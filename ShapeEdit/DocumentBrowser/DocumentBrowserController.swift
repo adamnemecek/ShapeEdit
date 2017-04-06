@@ -193,8 +193,8 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
 
     // MARK: - ThumbnailCacheDelegateType
     
-    func thumbnailCache(_ thumbnailCache: ThumbnailCache, didLoadThumbnailsForURLs URLs: Set<URL>) {
-        let paths = URLs.flatMap {
+    func thumbnailCache(_ thumbnailCache: ThumbnailCache, didLoadThumbnailsForURLs urls: Set<URL>) {
+        let paths = urls.flatMap {
             self.documents.remove(by: $0).map {
                 IndexPath(item: $0, section: DocumentBrowserController.documentsSection)
             } ??
@@ -365,7 +365,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Document Opening
     
-    func documentWasOpenedSuccessfullyAtURL(_ url: Foundation.URL) {
+    func documentWasOpenedSuccessfullyAtURL(_ url: URL) {
         recentsManager.add(url)
     }
     

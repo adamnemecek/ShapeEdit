@@ -148,42 +148,38 @@ class ThumbnailCache {
         cleanThumbnailDocumentIDs.removeAll()
     }
     
-    func markThumbnailDirtyForURL(_ url: Foundation.URL) {
+    func markThumbnailDirtyForURL(_ url: URL) {
         /*
          Mark the item dirty so that we know the next time we are asked for the
          thumbnail that we need to reload it.
          */
-        if let documentIdentifier = documentIdentifierForURL(url) {
-            cleanThumbnailDocumentIDs.remove(documentIdentifier)
+        _ = self[url].map {
+            self.cleanThumbnailDocumentIDs.remove($0)
         }
     }
     
-    func removeThumbnailForURL(_ url: Foundation.URL) {
+    func removeThumbnailForURL(_ url: URL) {
         /*
          Remove the item entirely from the cache because the item existing in the cache no
          longer makes sense for that URL.
          */
-        if let documentIdentifier = documentIdentifierForURL(url) {
-            cache.removeObject(forKey: NSNumber(value: documentIdentifier))
-            
-            cleanThumbnailDocumentIDs.remove(documentIdentifier)
+        _ = self[url].map {
+            self.cache.removeObject(forKey: NSNumber(value: $0))
+            self.cleanThumbnailDocumentIDs.remove($0)
         }
     }
     
-    func cancelThumbnailLoadForURL(_ url: Foundation.URL) {
-        if let documentIdentifier = documentIdentifierForURL(url) {
-            if let index = unscheduledDocumentIDs.index(of: documentIdentifier) {
-                unscheduledDocumentIDs.remove(at: index)
-                
-                pendingThumbnails[documentIdentifier] = nil
+    func cancelThumbnailLoadForURL(_ url: URL) {
+        _ = self[url].map { id in
+            _ = self.unscheduledDocumentIDs.remove(id).map { _ in
+                self.pendingThumbnails[id] = nil
             }
         }
     }
     
     
     // MARK: - Thumbnail Loading
-    
-    fileprivate func documentIdentifierForURL(_ url: Foundation.URL) -> Int? {
+    fileprivate subscript(url: URL) -> Int? {
         // Look up the document identifier on the URL which uniquely identifies a document.
         do {
             var documentIdentifier: AnyObject?
@@ -213,7 +209,7 @@ class ThumbnailCache {
         }
     }
     
-    fileprivate func loadThumbnailInBackgroundForURL(_ url: Foundation.URL, documentIdentifier: Int, alreadyCached: Bool) {
+    fileprivate func loadThumbnailInBackgroundForURL(_ url: URL, documentIdentifier: Int, alreadyCached: Bool) {
         self.workerQueue.addOperation {
             if let thumbnail = self.loadThumbnailFromDiskForURL(url) {
                 // Scale the image to correct size.
@@ -274,7 +270,7 @@ class ThumbnailCache {
         }
     }
     
-    func loadThumbnailForURL(_ url: Foundation.URL) -> UIImage {
+    func loadThumbnailForURL(_ url: URL) -> UIImage {
         /*
          We load the existing thumbnail (or a placeholder image if none has been
          loaded yet) and check if it is clean or not. If it isn't clean, we
@@ -289,7 +285,7 @@ class ThumbnailCache {
          We cache everything in our thumbnail cache by document identifier which
          is tracked properly accross renames.
          */
-        guard let documentIdentifier = documentIdentifierForURL(url) else {
+        guard let documentIdentifier = self[url] else {
             print("Failed to load docID and will display placeholder image for \(url)")
             
             return UIImage(named: "MissingThumbnail.png")!
@@ -324,7 +320,7 @@ class ThumbnailCache {
         return loadedThumbnail
     }
     
-    fileprivate func loadThumbnailFromDiskForURL(_ url: Foundation.URL) -> UIImage? {
+    fileprivate func loadThumbnailFromDiskForURL(_ url: URL) -> UIImage? {
         do {
             /*
              Load the thumbnail from disk.  Use getPromisedItemResourceValue because

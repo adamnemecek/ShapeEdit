@@ -13,7 +13,7 @@ protocol ModelObject: class {
     
     var subtitle: String { get }
     
-    var url: Foundation.URL { get }
+    var url: URL { get }
 }
 
 /**
