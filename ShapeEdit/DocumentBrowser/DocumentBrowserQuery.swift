@@ -34,21 +34,19 @@ extension Notification {
     }
 }
 
-//
-//class OrderedSet<Element : NSMetadataItem> : NSOrderedSet {
-//    init(sort content: [Element]) {
-//        super.init(array: content.sorted { $0 < $1 })
-//    }
-//    
-//    required convenience init(arrayLiteral elements: Element...) {
-//        self.init(sort: Array(element))
-//    }
-//    
-//    required init?(coder aDecoder: NSCoder) {
-//        super.init(coder: aDecoder)
-//    }
-//}
-
+extension NSMetadataQuery {
+    func resultSet() -> NSOrderedSet {
+        /*
+         Create an ordered set of model objects from the query's current
+         result set.
+         */
+        
+        disableUpdates()
+        let res = self.results as! [NSMetadataItem]
+        enableUpdates()
+        return NSOrderedSet(array: res.sorted())
+    }
+}
 
 /**
     The DocumentBrowserQuery wraps an `NSMetadataQuery` to insulate us from the
@@ -117,49 +115,14 @@ class DocumentBrowserQuery: NSObject {
     // MARK: - Notifications
 
     @objc func queryUpdated(_ notification: Notification) {
-        let changedResults = notification[metadata: NSMetadataQueryUpdateChangedItemsKey]
-        let removedResults = notification[metadata: NSMetadataQueryUpdateRemovedItemsKey]
-        let addedResults = notification[metadata: NSMetadataQueryUpdateAddedItemsKey]
-        
-        let newResults = buildQueryResultSet()
-
-        updateWithResults(newResults, removedResults: removedResults, addedResults: addedResults, changedResults: changedResults)
+        updateWithResults(metadataQuery.resultSet(),
+                          removedResults: notification[metadata: NSMetadataQueryUpdateRemovedItemsKey],
+                          addedResults: notification[metadata: NSMetadataQueryUpdateAddedItemsKey],
+                          changedResults: notification[metadata: NSMetadataQueryUpdateChangedItemsKey])
     }
 
     @objc func finishGathering(_ notification: Notification) {
-        metadataQuery.disableUpdates()
-        
-        let metadataQueryResults = metadataQuery.results as! [NSMetadataItem]
-        
-        let results = buildModelObjectSet(metadataQueryResults)
-                
-        metadataQuery.enableUpdates()
-
-        updateWithResults(results)
-    }
-
-    // MARK: - Result handling/animations
-
-    fileprivate func buildModelObjectSet(_ objects: [NSMetadataItem]) -> NSOrderedSet {
-        // Create an ordered set of model objects.
-        return NSOrderedSet(array: objects.sorted())
-    }
-    
-    fileprivate func buildQueryResultSet() -> NSOrderedSet {
-        /*
-           Create an ordered set of model objects from the query's current
-           result set.
-        */
-
-        metadataQuery.disableUpdates()
-
-        let metadataQueryResults = metadataQuery.results as! [NSMetadataItem]
-
-        let results = buildModelObjectSet(metadataQueryResults)
-
-        metadataQuery.enableUpdates()
-
-        return results
+        updateWithResults(metadataQuery.resultSet())
     }
 
     fileprivate func computeAnimationsForNewResults(_ newResults: NSOrderedSet, oldResults: NSOrderedSet, removedResults: NSOrderedSet, addedResults: NSOrderedSet, changedResults: NSOrderedSet) -> [DocumentBrowserAnimation] {
@@ -168,25 +131,25 @@ class DocumentBrowserQuery: NSObject {
            should be run to morph old into new results.
         */
         
-        let oldResultAnimations: [DocumentBrowserAnimation] = removedResults.array.flatMap {
-            return oldResults._index(of: $0).map { .delete(index: $0) }
+        let oldResultAnimations: [DocumentBrowserAnimation] = removedResults.flatMap {
+            oldResults._index(of: $0).map { .delete(index: $0) }
         }
         
-        let newResultAnimations: [DocumentBrowserAnimation] = addedResults.array.flatMap {
-            return newResults._index(of: $0).map { .add(index: $0) }
+        let newResultAnimations: [DocumentBrowserAnimation] = addedResults.flatMap {
+            newResults._index(of: $0).map { .add(index: $0) }
         }
 
-        let movedResultAnimations: [DocumentBrowserAnimation] = changedResults.array.flatMap { movedResult in
-            if let newIndex = newResults._index(of: movedResult),
-                let oldIndex = oldResults._index(of: movedResult), oldIndex == newIndex {
+        let movedResultAnimations: [DocumentBrowserAnimation] = changedResults.flatMap {
+            if let newIndex = newResults._index(of: $0),
+                let oldIndex = oldResults._index(of: $0), oldIndex == newIndex {
                 return .move(fromIndex: oldIndex, toIndex: newIndex)
             }
             return nil
         }
 
         // Find all the changed result animations.
-        let changedResultAnimations: [DocumentBrowserAnimation] = changedResults.array.flatMap { changedResult in
-            return newResults._index(of: changedResult).map { .update(index: $0) }
+        let changedResultAnimations: [DocumentBrowserAnimation] = changedResults.flatMap {
+            newResults._index(of: $0).map { .update(index: $0) }
         }
         
         return oldResultAnimations + changedResultAnimations + newResultAnimations + movedResultAnimations
