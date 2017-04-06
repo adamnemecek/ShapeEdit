@@ -259,9 +259,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         let document = documentForIndexPath(indexPath)
         
         let visibleURLs: [URL] = collectionView.indexPathsForVisibleItems.map { indexPath in
-            let document = documentForIndexPath(indexPath)
-            
-            return document.url
+            documentForIndexPath(indexPath).url
         }
         
         if !visibleURLs.contains(document.url) {
@@ -273,9 +271,9 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     // MARK: - Document handling support
         
     fileprivate func documentBrowserModelObjectForURL(_ url: URL) -> DocumentBrowserModelObject? {
-        guard let matchingDocumentIndex = documents.index(where: { $0.url == url }) else { return nil }
-        
-        return documents[matchingDocumentIndex]
+        return documents.index(where: { $0.url == url }).map {
+            self.documents[$0]
+        }
     }
 
     fileprivate func documentForIndexPath(_ indexPath: IndexPath) -> ModelObject {
