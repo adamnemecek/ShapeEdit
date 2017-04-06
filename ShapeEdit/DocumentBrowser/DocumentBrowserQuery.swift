@@ -27,9 +27,20 @@ extension NSOrderedSet {
     }
 }
 
-class OrderedSet<Element: AnyObject> : NSOrderedSet {
-    
-}
+//
+//class OrderedSet<Element : NSMetadataItem> : NSOrderedSet {
+//    init(sort content: [Element]) {
+//        super.init(array: content.sorted { $0 < $1 })
+//    }
+//    
+//    required convenience init(arrayLiteral elements: Element...) {
+//        self.init(sort: Array(element))
+//    }
+//    
+//    required init?(coder aDecoder: NSCoder) {
+//        super.init(coder: aDecoder)
+//    }
+//}
 
 
 /**
@@ -156,16 +167,12 @@ class DocumentBrowserQuery: NSObject {
            should be run to morph old into new results.
         */
         
-        let oldResultAnimations: [DocumentBrowserAnimation] = removedResults.array.flatMap { removedResult in
-            return oldResults._index(of: removedResult).map { .delete(index: $0) }
+        let oldResultAnimations: [DocumentBrowserAnimation] = removedResults.array.flatMap {
+            return oldResults._index(of: $0).map { .delete(index: $0) }
         }
         
-        let newResultAnimations: [DocumentBrowserAnimation] = addedResults.array.flatMap { addedResult in
-            let newIndex = newResults.index(of: addedResult)
-            
-            guard newIndex != NSNotFound else { return nil }
-            
-            return .add(index: newIndex)
+        let newResultAnimations: [DocumentBrowserAnimation] = addedResults.array.flatMap {
+            return newResults._index(of: $0).map { .add(index: $0) }
         }
 
         let movedResultAnimations: [DocumentBrowserAnimation] = changedResults.array.flatMap { movedResult in
