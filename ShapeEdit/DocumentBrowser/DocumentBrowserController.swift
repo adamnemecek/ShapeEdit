@@ -251,15 +251,9 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     }
     
     override func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-
-        
-        let visibleURLs: [URL] = collectionView.indexPathsForVisibleItems.map { indexPath in
-            self[indexPath].url
-        }
-        
-        let document = self[indexPath]
-        if !visibleURLs.contains(document.url) {
-            thumbnailCache.cancelThumbnailLoadForURL(document.url)
+        let docURL = self[indexPath].url
+        if (collectionView.indexPathsForVisibleItems.contains { self[$0].url == docURL }) {
+            thumbnailCache.cancelThumbnailLoadForURL(docURL)
         }
     }
 

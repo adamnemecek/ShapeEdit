@@ -10,9 +10,7 @@ import Foundation
 /// The base protocol for all collection view objects to display in our UI.
 public protocol ModelObject: class {
     var displayName: String { get }
-    
     var subtitle: String { get }
-    
     var url: URL { get }
 }
 
