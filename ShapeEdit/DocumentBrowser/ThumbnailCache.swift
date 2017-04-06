@@ -84,12 +84,21 @@ extension OperationQueue {
     }
 }
 
+class ThumbNailCache : NSCache<NSNumber, UIImage> {
+    override convenience init() {
+        self.init()
+        
+        self.name = "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache"
+        self.countLimit = 64
+    }
+}
+
 
 class ThumbnailCache {
     // MARK: - Properties
     
-    fileprivate let cache = NSCache<NSNumber, UIImage>(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache", count: 64)
-    
+    fileprivate let cache = ThumbNailCache()
+
     fileprivate let workerQueue = OperationQueue(name: .thumbNailCache)
     
     private let thumbnailSize: CGSize
