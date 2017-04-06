@@ -143,7 +143,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
                     to mark the bookmark as suitable for a bookmark file or it won't
                     resolve properly.
                 */
-                bookmarkData = try (url as NSURL).bookmarkData(options: .suitableForBookmarkFile, includingResourceValuesForKeys: nil, relativeTo: nil)
+                bookmarkData = try url.bookmarkData(options: .suitableForBookmarkFile, includingResourceValuesForKeys: nil, relativeTo: nil)
                 
                 self.bookmarkDataNeedsSave = false
             }
@@ -181,7 +181,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
              // Ignore a failure here. We'll just keep the old display name.
         }
         
-        delegate?.recentNeedsReload(self)
+        presentedItemDidChange()
     }
 
     func presentedItemDidChange() {

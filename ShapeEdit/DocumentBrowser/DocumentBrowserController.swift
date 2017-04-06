@@ -251,7 +251,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         // Locate the selected document and open it.
         let document = documentForIndexPath(indexPath)
 
-        openDocumentAtURL(document.url)
+        open(document.url)
     }
     
     override func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -349,7 +349,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
                     try (writeIntent.url as NSURL).setResourceValue(true, forKey: URLResourceKey.hasHiddenExtensionKey)
                     
                     OperationQueue.main.addOperation {
-                        self.openDocumentAtURL(writeIntent.url)
+                        self.open(writeIntent.url)
                     }
                 }
                 catch {
@@ -362,10 +362,10 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     // MARK: - Document Opening
     
     func documentWasOpenedSuccessfullyAtURL(_ url: Foundation.URL) {
-        recentsManager.addURLToRecents(url)
+        recentsManager.add(url)
     }
     
-    func openDocumentAtURL(_ url: URL) {
+    func open(_ url: URL) {
         // Push a view controller which will manage editing the document.
         let controller = storyboard!.instantiateViewController(withIdentifier: "Document") as! DocumentViewController
 
@@ -374,13 +374,13 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         show(controller, sender: self)
     }
 
-    func openDocumentAtURL(_ url: URL, copyBeforeOpening: Bool) {
+    func open(_ url: URL, copyBeforeOpening: Bool) {
         if copyBeforeOpening  {
             // Duplicate the document and open it.
             createNewDocumentWithTemplate(url)
         }
         else {
-            openDocumentAtURL(url)
+            open(url)
         }
     }
 }

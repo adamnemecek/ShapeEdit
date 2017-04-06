@@ -35,7 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
             return false
         }
         
-        documentBrowserController.openDocumentAtURL(url, copyBeforeOpening: !shouldOpenInPlace)
+        documentBrowserController.open(url, copyBeforeOpening: !shouldOpenInPlace)
 
         return true
     }
