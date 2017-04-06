@@ -85,8 +85,8 @@ extension OperationQueue {
 }
 
 class ThumbNailCache : NSCache<NSNumber, UIImage> {
-    override convenience init() {
-        self.init()
+    override init() {
+        super.init()
         
         self.name = "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache"
         self.countLimit = 64
@@ -253,14 +253,12 @@ class ThumbnailCache {
             self.runningDocumentIDCount += 1
             
             let thumbnailURL = self.pendingThumbnails[nextDocId]!.first!
-            
-            let alreadyCached = self.cache[nextDocId] != nil
-            
-            self.loadThumbnailInBackgroundForURL(thumbnailURL, docId: nextDocId, alreadyCached: alreadyCached)
+
+            self.loadThumbnailInBackground(for: thumbnailURL, docId: nextDocId)
         }
     }
     
-    fileprivate func loadThumbnailInBackgroundForURL(_ url: URL, docId: Int, alreadyCached: Bool) {
+    fileprivate func loadThumbnailInBackground(for url: URL, docId: Int) {
         self.workerQueue.addOperation {
             if let thumbnail = (url as NSURL).thumbNailFromDisk {
                 // Scale the image to correct size.
@@ -296,11 +294,9 @@ class ThumbnailCache {
             }
             else {
                 // Thumbnail loading failed. Just use the most recent cached thumbail.
-                if !alreadyCached {
-                    let image = UIImage(named: "MissingThumbnail.png")!
-                    self.cache[docId] = image
-                }
-                
+
+                self.cache[docId] = self.cache[docId] ?? UIImage(named: "MissingThumbnail.png")
+
                 OperationQueue.main.addOperation {
                     self.cleanThumbnailDocumentIDs.insert(docId)
                     

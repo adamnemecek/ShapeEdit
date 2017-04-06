@@ -75,15 +75,15 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
             Our app only supports iCloud Drive so display an error message when 
             it is disabled.
         */
-        if FileManager().ubiquityIdentityToken == nil {
-            let alertController = UIAlertController(title: "iCloud is disabled", message: "Please enable iCloud Drive in Settings to use this app", preferredStyle: .alert)
-            
-            let alertAction = UIAlertAction(title: "Dismiss", style: .default, handler: nil)
-            
-            alertController.addAction(alertAction)
-            
-            present(alertController, animated: true, completion: nil)
-        }
+//        if FileManager().ubiquityIdentityToken == nil {
+//            let alertController = UIAlertController(title: "iCloud is disabled", message: "Please enable iCloud Drive in Settings to use this app", preferredStyle: .alert)
+//            
+//            let alertAction = UIAlertAction(title: "Dismiss", style: .default, handler: nil)
+//            
+//            alertController.addAction(alertAction)
+//            
+//            present(alertController, animated: true, completion: nil)
+//        }
     }
 
     @IBAction func insertNewObject(_ sender: UIBarButtonItem) {
@@ -306,56 +306,67 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         */
         coordinationQueue.addOperation {
             let fileManager = FileManager()
-            guard let baseURL = fileManager.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents").appendingPathComponent("Untitled") else {
+            if #available(iOS 10.0, *) {
+                var tmp = fileManager.temporaryDirectory
+                tmp.appendPathComponent("Untitled")
+                var baseURL = tmp
                 
-                self.presentCloudDisabledAlert()
                 
-                return
-            }
-
-            var target = baseURL.appendingPathExtension(DocumentBrowserController.documentExtension)
-            
-            /*
-                We will append this value to our name until we find a path that
-                doesn't exist.
-            */
-            var nameSuffix = 2
-            
-            /*
-                Find a suitable filename that doesn't already exist on disk.
-                Do not use `fileManager.fileExistsAtPath(target.path!)` because
-                the document might not have downloaded yet.
-            */
-            while (target as NSURL).checkPromisedItemIsReachableAndReturnError(nil) {
-                target = URL(fileURLWithPath: baseURL.path + "-\(nameSuffix).\(DocumentBrowserController.documentExtension)")
-
-                nameSuffix += 1
-            }
-            
-            // Coordinate reading on the source path and writing on the destination path to copy.
-            let readIntent = NSFileAccessIntent.readingIntent(with: templateURL, options: [])
-
-            let writeIntent = NSFileAccessIntent.writingIntent(with: target, options: .forReplacing)
-            
-            NSFileCoordinator().coordinate(with: [readIntent, writeIntent], queue: self.coordinationQueue) { error in
-                if error != nil {
-                    return
+                
+                //            guard let baseURL = fileManager.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents").appendingPathComponent("Untitled") else {
+                //
+                //                self.presentCloudDisabledAlert()
+                //
+                //                return
+                //            }
+                
+                var target = baseURL.appendingPathExtension(DocumentBrowserController.documentExtension)
+                
+                /*
+                 We will append this value to our name until we find a path that
+                 doesn't exist.
+                 */
+                var nameSuffix = 2
+                
+                /*
+                 Find a suitable filename that doesn't already exist on disk.
+                 Do not use `fileManager.fileExistsAtPath(target.path!)` because
+                 the document might not have downloaded yet.
+                 */
+                while (target as NSURL).checkPromisedItemIsReachableAndReturnError(nil) {
+                    target = URL(fileURLWithPath: baseURL.path + "-\(nameSuffix).\(DocumentBrowserController.documentExtension)")
+                    
+                    nameSuffix += 1
                 }
                 
-                do {
-                    try fileManager.copyItem(at: readIntent.url, to: writeIntent.url)
+                // Coordinate reading on the source path and writing on the destination path to copy.
+                let readIntent = NSFileAccessIntent.readingIntent(with: templateURL, options: [])
+                
+                let writeIntent = NSFileAccessIntent.writingIntent(with: target, options: .forReplacing)
+                
+                NSFileCoordinator().coordinate(with: [readIntent, writeIntent], queue: self.coordinationQueue) { error in
+                    if error != nil {
+                        return
+                    }
                     
-                    try (writeIntent.url as NSURL).setResourceValue(true, forKey: .hasHiddenExtensionKey)
-                    
-                    OperationQueue.main.addOperation {
-                        self.open(writeIntent.url)
+                    do {
+                        try fileManager.copyItem(at: readIntent.url, to: writeIntent.url)
+                        
+                        try (writeIntent.url as NSURL).setResourceValue(true, forKey: .hasHiddenExtensionKey)
+                        
+                        OperationQueue.main.addOperation {
+                            self.open(writeIntent.url)
+                        }
+                    }
+                    catch {
+                        fatalError("Unexpected error during trivial file operations: \(error)")
                     }
                 }
-                catch {
-                    fatalError("Unexpected error during trivial file operations: \(error)")
-                }
+            } else {
+                fatalError()
             }
         }
+        
     }
     
     // MARK: - Document Opening

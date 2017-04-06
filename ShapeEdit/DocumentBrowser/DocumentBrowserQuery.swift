@@ -57,8 +57,6 @@ class DocumentBrowserQuery: NSMetadataQuery {
     // MARK: - Properties
 
     fileprivate var previous: NSOrderedSet?
-    
-    fileprivate let workerQueue = OperationQueue(name: .browser)
 
     var _delegate: DocumentBrowserQueryDelegate? {
         didSet {
@@ -66,7 +64,7 @@ class DocumentBrowserQuery: NSMetadataQuery {
                 If we already have results, we send them to the delegate as an
                 initial update.
             */
-            workerQueue.addOperation {
+            self.operationQueue?.addOperation {
                 self.previous.map {
                     self.update(with: $0)
                 }
@@ -99,7 +97,7 @@ class DocumentBrowserQuery: NSMetadataQuery {
             can perform our own background work in sync with item discovery.
             Note that the operationQueue of the `NSMetadataQuery` must be serial.
         */
-        self.operationQueue = workerQueue
+        self.operationQueue = OperationQueue(name: .browser)
 
         NotificationCenter.default.addObserver(self, selector: #selector(finishGathering), name: .NSMetadataQueryDidFinishGathering, object: nil)
 
