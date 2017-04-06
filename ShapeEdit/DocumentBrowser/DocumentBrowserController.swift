@@ -15,6 +15,13 @@ import UIKit
     changes.  It also handles pushing the `DocumentViewController` when a document is
     selected.
 */
+
+extension OperationQueue {
+    convenience init(name1: String) {
+        self.init()
+        self.name = name1
+    }
+}
 class DocumentBrowserController: UICollectionViewController, DocumentBrowserQueryDelegate, RecentModelObjectsManagerDelegate, ThumbnailCacheDelegate {
     
     // MARK: - Constants
@@ -36,13 +43,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     let thumbnailCache = ThumbnailCache(thumbnailSize: CGSize(width: 220, height: 270))
     
-    fileprivate let coordinationQueue: OperationQueue = {
-        let coordinationQueue = OperationQueue()
-        
-        coordinationQueue.name = "com.example.apple-samplecode.ShapeEdit.documentbrowser.coordinationQueue"
-        
-        return coordinationQueue
-    }()
+    fileprivate let coordinationQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.documentbrowser.coordinationQueue")
     
     // MARK: - View Controller Override
     
