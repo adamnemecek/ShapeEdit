@@ -26,22 +26,22 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Constants
     
-    static let recentsSection = 0
+    private static let recentsSection = 0
     static let documentsSection = 1
 
     static let documentExtension = "shapeFile"
     
     // MARK: - Properties
     
-    var documents = [DocumentBrowserModelObject]()
+    private var documents = [DocumentBrowserModelObject]()
     
-    var recents = [RecentModelObject]()
+    private var recents = [RecentModelObject]()
     
-    var browserQuery = DocumentBrowserQuery()
+    private var browserQuery = DocumentBrowserQuery()
     
-    let recentsManager = RecentModelObjectsManager()
+    private let recentsManager = RecentModelObjectsManager()
     
-    let thumbnailCache = ThumbnailCache(thumbnailSize: CGSize(width: 220, height: 270))
+    private let thumbnailCache = ThumbnailCache(thumbnailSize: CGSize(width: 220, height: 270))
     
     fileprivate let coordinationQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.documentbrowser.coordinationQueue")
     
@@ -76,9 +76,9 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
 
     @IBAction func insertNewObject(_ sender: UIBarButtonItem) {
         // Create a document with the default template.
-        let templateURL = Bundle.main.url(forResource: "Template", withExtension: DocumentBrowserController.documentExtension)!
+        let url = Bundle.main.url(forResource: "Template", withExtension: DocumentBrowserController.documentExtension)!
 
-        createNewDocumentWithTemplate(templateURL)
+        new(url)
     }
     
     // MARK: - DocumentBrowserQueryDelegate
@@ -299,7 +299,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         }
     }
     
-    fileprivate func createNewDocumentWithTemplate(_ templateURL: URL) {
+    fileprivate func new(_ templateURL: URL) {
         /*
             We don't create a new document on the main queue because the call to
             fileManager.urlForUbiquityContainerIdentifier could potentially block
@@ -376,7 +376,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     func open(_ url: URL, copyBeforeOpening: Bool) {
         if copyBeforeOpening  {
             // Duplicate the document and open it.
-            createNewDocumentWithTemplate(url)
+            new(url)
         }
         else {
             open(url)

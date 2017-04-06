@@ -81,9 +81,9 @@ class DocumentBrowserQuery: NSObject {
 
         super.init()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.finishGathering(_:)), name: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: metadataQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.finishGathering(_:)), name: .NSMetadataQueryDidFinishGathering, object: metadataQuery)
 
-        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.queryUpdated(_:)), name: NSNotification.Name.NSMetadataQueryDidUpdate, object: metadataQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(DocumentBrowserQuery.queryUpdated(_:)), name: .NSMetadataQueryDidUpdate, object: metadataQuery)
 
         metadataQuery.start()
     }

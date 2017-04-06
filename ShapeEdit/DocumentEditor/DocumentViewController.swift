@@ -53,7 +53,7 @@ class DocumentViewController: UIViewController {
         
         progressView.isHidden = false
         
-        documentObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.UIDocumentStateChanged, object: document, queue: nil) { _ in
+        documentObserver = NotificationCenter.default.addObserver(forName: .UIDocumentStateChanged, object: document, queue: nil) { _ in
             if self.document.documentState.contains(.progressAvailable) {
                 self.progressView.observedProgress = self.document.progress
             }
