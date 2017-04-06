@@ -22,6 +22,18 @@ extension OperationQueue {
         self.name = name1
     }
 }
+
+extension UIViewController {
+    func open(_ url: URL) {
+        // Push a view controller which will manage editing the document.
+        let controller = storyboard!.instantiateViewController(withIdentifier: "Document") as! DocumentViewController
+        
+        controller.documentURL = url
+        
+        show(controller, sender: self)
+    }
+}
+
 class DocumentBrowserController: UICollectionViewController, DocumentBrowserQueryDelegate, RecentModelObjectsManagerDelegate, ThumbnailCacheDelegate {
     
     // MARK: - Constants
@@ -155,34 +167,23 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         
         for animation in animations {
             switch animation {
-                case .add(let row):
-                    collectionView.insertItems(at: [
-                        IndexPath(row: row, section: section)
-                    ])
+                case let .add(row):
+                    collectionView.insertItems(at: [ IndexPath(row: row, section: section) ])
                 
-                case .delete(let row):
-                    collectionView.deleteItems(at: [
-                        IndexPath(row: row, section: section)
-                    ])
+                case let .delete(row):
+                    collectionView.deleteItems(at: [ IndexPath(row: row, section: section) ])
+                    self.thumbnailCache.removeThumbnailForURL(old[row].url)
                     
-                    let url = old[row].url
-                    self.thumbnailCache.removeThumbnailForURL(url)
-                    
-                case .move(let from, let to):
+                case let .move(from, to):
                     let fromIndexPath = IndexPath(row: from, section: section)
                     
                     let toIndexPath = IndexPath(row: to, section: section)
                     
                     collectionView.moveItem(at: fromIndexPath, to: toIndexPath)
                 
-                case .update(let row):
-                    indexPathsNeedingReload += [
-                        IndexPath(row: row, section: section)
-                    ]
-                    
-                    let URL = newResults[row].url
-                    self.thumbnailCache.markThumbnailDirtyForURL(URL)
-                    
+                case let .update(row):
+                    indexPathsNeedingReload += [ IndexPath(row: row, section: section) ]
+                    self.thumbnailCache.markThumbnailDirtyForURL(newResults[row].url)
                 case .reload:
                     fatalError("Unreachable")
             }
@@ -363,14 +364,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
         recentsManager.add(url)
     }
     
-    func open(_ url: URL) {
-        // Push a view controller which will manage editing the document.
-        let controller = storyboard!.instantiateViewController(withIdentifier: "Document") as! DocumentViewController
 
-        controller.documentURL = url
-        
-        show(controller, sender: self)
-    }
 
     func open(_ url: URL, copyBeforeOpening: Bool) {
         if copyBeforeOpening  {

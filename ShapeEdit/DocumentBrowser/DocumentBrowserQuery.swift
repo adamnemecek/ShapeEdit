@@ -42,7 +42,7 @@ extension NSMetadataQuery {
          */
         
         disableUpdates()
-        let res = self.results as! [NSMetadataItem]
+        let res = results as! [NSMetadataItem]
         enableUpdates()
         return NSOrderedSet(array: res.sorted())
     }
