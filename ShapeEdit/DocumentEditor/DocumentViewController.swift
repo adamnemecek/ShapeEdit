@@ -64,15 +64,11 @@ class DocumentViewController: UIViewController {
             if success {
                 self.updateView()
                 
-                guard let navigation = self.navigationController else {
-                    return
-                }
-                
-                guard let documentBrowserController = navigation.viewControllers.first as? DocumentBrowserController else {
+                guard let ctrl = self.navigationController?.viewControllers.first as? DocumentBrowserController else {
                     return
                 }
 
-                documentBrowserController.documentWasOpenedSuccessfullyAtURL(self.document.fileURL)
+                ctrl.documentWasOpenedSuccessfullyAtURL(self.document.fileURL)
             }
             else {
                 let title = self.title!

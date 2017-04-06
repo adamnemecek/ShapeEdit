@@ -95,10 +95,8 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
             self.recentModelObjects = loadedRecents
             
             // Check if the bookmark data is stale and resave the recents if it is.
-            for recent in loadedRecents {
-                if recent.bookmarkDataNeedsSave {
+            for recent in loadedRecents where recent.bookmarkDataNeedsSave {
                     self.saveRecents()
-                }
             }
             
             OperationQueue.main.addOperation {
