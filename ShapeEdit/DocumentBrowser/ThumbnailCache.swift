@@ -1,17 +1,17 @@
 /*
-    Copyright (C) 2016 Apple Inc. All Rights Reserved.
-    See LICENSE.txt for this sample’s licensing information
-    
-    Abstract:
-    `ThumbnailCache` manages loading thumbnails on background queues and keeping track of which thumbnails are up to date. It also stores thumbnails in a cache for quick access at a later time.
-*/
+ Copyright (C) 2016 Apple Inc. All Rights Reserved.
+ See LICENSE.txt for this sample’s licensing information
+ 
+ Abstract:
+ `ThumbnailCache` manages loading thumbnails on background queues and keeping track of which thumbnails are up to date. It also stores thumbnails in a cache for quick access at a later time.
+ */
 
 import UIKit
 
 /**
-    This delegate protocol is implemented so we can receive a callback when the
-    thumbnail is loaded.
-*/
+ This delegate protocol is implemented so we can receive a callback when the
+ thumbnail is loaded.
+ */
 protocol ThumbnailCacheDelegate: class {
     func thumbnailCache(_ thumbnailCache: ThumbnailCache, didLoadThumbnailsForURLs: Set<URL>)
 }
@@ -28,9 +28,9 @@ protocol ThumbnailCacheDelegate: class {
 //}
 
 /**
-    The thumbnail cache class handles loading thumbnails, scaling the thumbnails
-    to the propper size for our UI and informing its delegate once they're loaded.
-*/
+ The thumbnail cache class handles loading thumbnails, scaling the thumbnails
+ to the propper size for our UI and informing its delegate once they're loaded.
+ */
 
 extension RangeReplaceableCollection where Iterator.Element : Equatable {
     @discardableResult
@@ -41,6 +41,17 @@ extension RangeReplaceableCollection where Iterator.Element : Equatable {
         }
     }
 }
+extension RangeReplaceableCollection where Iterator.Element : ModelObject {
+    mutating func remove(by url: URL) -> Index? {
+        return index {
+            $0.url == url
+        }.map {
+            self.remove(at: $0)
+            return $0
+        }
+    }
+}
+
 
 
 
@@ -63,9 +74,9 @@ extension OperationQueue {
 
 class ThumbnailCache {
     // MARK: - Properties
-
+    
     fileprivate let cache = NSCache<NSNumber, UIImage>(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache", count: 64)
-
+    
     fileprivate let workerQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.workerQueue")
     
     let thumbnailSize: CGSize
@@ -87,9 +98,9 @@ class ThumbnailCache {
     weak var delegate: ThumbnailCacheDelegate?
     
     static let concurrentThumbnailOperations = 4
-
+    
     // MARK: - Initialization
-
+    
     init (thumbnailSize:CGSize) {
         self.thumbnailSize = thumbnailSize
         
@@ -116,29 +127,29 @@ class ThumbnailCache {
         
         flushSource.resume()
     }
-
+    
     // MARK: - Cache Management
     
     func markThumbnailCacheDirty() {
         // We've been asked to reload the UI and need to reload all items in the cache.
         cleanThumbnailDocumentIDs.removeAll()
     }
-
+    
     func markThumbnailDirtyForURL(_ url: Foundation.URL) {
         /*
-            Mark the item dirty so that we know the next time we are asked for the
-            thumbnail that we need to reload it.
-        */
+         Mark the item dirty so that we know the next time we are asked for the
+         thumbnail that we need to reload it.
+         */
         if let documentIdentifier = documentIdentifierForURL(url) {
             cleanThumbnailDocumentIDs.remove(documentIdentifier)
         }
     }
-
+    
     func removeThumbnailForURL(_ url: Foundation.URL) {
         /*
-            Remove the item entirely from the cache because the item existing in the cache no
-            longer makes sense for that URL.
-        */
+         Remove the item entirely from the cache because the item existing in the cache no
+         longer makes sense for that URL.
+         */
         if let documentIdentifier = documentIdentifierForURL(url) {
             cache.removeObject(forKey: NSNumber(value: documentIdentifier))
             
@@ -156,7 +167,7 @@ class ThumbnailCache {
         }
     }
     
-
+    
     // MARK: - Thumbnail Loading
     
     fileprivate func documentIdentifierForURL(_ url: Foundation.URL) -> Int? {
@@ -204,9 +215,9 @@ class ThumbnailCache {
                 UIGraphicsEndImageContext()
                 
                 /*
-                    Thumbnail loading succeeded. Save the thumbnail and call the
-                    reload blocks to reload the UI.
-                */
+                 Thumbnail loading succeeded. Save the thumbnail and call the
+                 reload blocks to reload the UI.
+                 */
                 self.cache.setObject(scaledThumbnail!, forKey: NSNumber(value: documentIdentifier))
                 
                 OperationQueue.main.addOperation {
@@ -222,7 +233,7 @@ class ThumbnailCache {
                     
                     // Trigger the event handler for the `flushSource` updating a batch of thumbnails.
                     self.flushSource.add(data: 1)
-
+                    
                     self.runningDocumentIDCount -= 1
                     
                     // Trigger the event handler for the `scheduleSource` scheduling thumbnail loading.
@@ -240,7 +251,7 @@ class ThumbnailCache {
                     self.cleanThumbnailDocumentIDs.insert(documentIdentifier)
                     
                     self.pendingThumbnails[documentIdentifier] = nil
-
+                    
                     self.runningDocumentIDCount -= 1
                     
                     // Trigger the event handler for the `scheduleSource` scheduling thumbnail loading.
@@ -252,19 +263,19 @@ class ThumbnailCache {
     
     func loadThumbnailForURL(_ url: Foundation.URL) -> UIImage {
         /*
-            We load the existing thumbnail (or a placeholder image if none has been
-            loaded yet) and check if it is clean or not. If it isn't clean, we 
-            load the thumbnail on a background queue to avoid blocking the main
-            thread which could hamper scroll performance. Regardless of whether or
-            not the thumbnail is clean, return the most up-to-date version of the
-            thumbnail so we are sure to display something relatively up-to-date in 
-            the UI.
-        */
+         We load the existing thumbnail (or a placeholder image if none has been
+         loaded yet) and check if it is clean or not. If it isn't clean, we
+         load the thumbnail on a background queue to avoid blocking the main
+         thread which could hamper scroll performance. Regardless of whether or
+         not the thumbnail is clean, return the most up-to-date version of the
+         thumbnail so we are sure to display something relatively up-to-date in
+         the UI.
+         */
         
         /*
-            We cache everything in our thumbnail cache by document identifier which
-            is tracked properly accross renames.
-        */
+         We cache everything in our thumbnail cache by document identifier which
+         is tracked properly accross renames.
+         */
         guard let documentIdentifier = documentIdentifierForURL(url) else {
             print("Failed to load docID and will display placeholder image for \(url)")
             
@@ -277,14 +288,14 @@ class ThumbnailCache {
             // Everything fully up-to-date - return the cached image.
             return existingImage
         }
-
+        
         // Use a placeholder image if one hasn't been loaded yet.
         let loadedThumbnail = existingImage ?? UIImage(named: "MissingThumbnail.png")!
-
+        
         // If we are already loading that thumbnail, add our url to the reload list.
         if let URLs = pendingThumbnails[documentIdentifier] {
             pendingThumbnails[documentIdentifier] = URLs.union([url])
-
+            
             return loadedThumbnail
         }
         
@@ -303,16 +314,16 @@ class ThumbnailCache {
     fileprivate func loadThumbnailFromDiskForURL(_ url: Foundation.URL) -> UIImage? {
         do {
             /*
-                Load the thumbnail from disk.  Use getPromisedItemResourceValue because
-                the document might not have been downloaded yet.
-            */
+             Load the thumbnail from disk.  Use getPromisedItemResourceValue because
+             the document might not have been downloaded yet.
+             */
             var thumbnailDictionary: AnyObject?
             try (url as NSURL).getPromisedItemResourceValue(&thumbnailDictionary, forKey: URLResourceKey.thumbnailDictionaryKey)
-
+            
             /*
-                We don't want to hang onto this in the URL cache because the URL 
-                is long running and we maintain a separate cache for the thumbnails.
-            */
+             We don't want to hang onto this in the URL cache because the URL
+             is long running and we maintain a separate cache for the thumbnails.
+             */
             (url as NSURL).removeCachedResourceValue(forKey: URLResourceKey.thumbnailDictionaryKey)
             
             guard let dictionary = thumbnailDictionary as? [String: UIImage],

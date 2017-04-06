@@ -194,19 +194,15 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     // MARK: - ThumbnailCacheDelegateType
     
     func thumbnailCache(_ thumbnailCache: ThumbnailCache, didLoadThumbnailsForURLs URLs: Set<URL>) {
-        let documentPaths: [IndexPath] = URLs.flatMap { url in
-            guard let matchingDocumentIndex = documents.index(where: { $0.url == url }) else { return nil }
-            
-            return IndexPath(item: matchingDocumentIndex, section: DocumentBrowserController.documentsSection)
+        let paths = URLs.flatMap {
+            self.documents.remove(by: $0).map {
+                IndexPath(item: $0, section: DocumentBrowserController.documentsSection)
+            } ??
+            self.recents.remove(by: $0).map {
+                IndexPath(item: $0, section: DocumentBrowserController.recentsSection)
+            }
         }
-        
-        let recentPaths: [IndexPath] = URLs.flatMap { url in
-            guard let matchingRecentIndex = recents.index(where: { $0.url == url }) else { return nil }
-            
-            return IndexPath(item: matchingRecentIndex, section: DocumentBrowserController.recentsSection)
-        }
-        
-        self.collectionView!.reloadItems(at: documentPaths + recentPaths)
+        self.collectionView!.reloadItems(at: paths)
     }
 
     // MARK: - Collection View
@@ -250,9 +246,8 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // Locate the selected document and open it.
-        let document = documentForIndexPath(indexPath)
 
-        open(document.url)
+        open(documentForIndexPath(indexPath).url)
     }
     
     override func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
