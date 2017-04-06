@@ -9,25 +9,44 @@
 import UIKit
 import SceneKit
 
-//extension SCNVector3 : NSCoding {
-//    public func encode(with aCoder: NSCoder) {
-//        aCoder.encode(x, forKey: "x")
-//        aCoder.encode(y, forKey: "y")
-//        aCoder.encode(z, forKey: "z")
-//
-//    }
-//
-//    public init?(coder aDecoder: NSCoder) {
-//
-//    }
-//
-//}
+extension SCNVector3  {
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(x, forKey: "x")
+        aCoder.encode(y, forKey: "y")
+        aCoder.encode(z, forKey: "z")
+
+    }
+
+    public init?(coder aDecoder: NSCoder) {
+        x = aDecoder.decodeFloat(forKey: "x")
+        y = aDecoder.decodeFloat(forKey: "y")
+        z = aDecoder.decodeFloat(forKey: "z")
+    }
+}
+
+
+extension SCNVector4  {
+    public func encode(with aCoder: NSCoder) {
+        aCoder.encode(x, forKey: "rx")
+        aCoder.encode(y, forKey: "ry")
+        aCoder.encode(z, forKey: "rz")
+        aCoder.encode(w, forKey: "rw")
+        
+    }
+    
+    public init?(coder aDecoder: NSCoder) {
+        x = aDecoder.decodeFloat(forKey: "rx")
+        y = aDecoder.decodeFloat(forKey: "ry")
+        z = aDecoder.decodeFloat(forKey: "rz")
+        w = aDecoder.decodeFloat(forKey: "rw")
+    }
+}
 
 /// We save and restore the camera state as an object to be able to use `NSCoding`.
 class CameraState: NSObject, NSCoding {
     // MARK: - Properties
     
-    var position: SCNVector3!
+    var position: SCNVector3
     var rotation: SCNVector4
     
     // MARK: - Initialization
@@ -42,28 +61,14 @@ class CameraState: NSObject, NSCoding {
     // MARK: - NSCoding
     
     required init?(coder aDecoder: NSCoder) {
-        position = SCNVector3(x: 0, y: 0, z: 4)
-        rotation = SCNVector4()
-        
-        position.x = aDecoder.decodeFloat(forKey: "x")
-        position.y = aDecoder.decodeFloat(forKey: "y")
-        position.z = aDecoder.decodeFloat(forKey: "z")
-        rotation.x = aDecoder.decodeFloat(forKey: "rx")
-        rotation.y = aDecoder.decodeFloat(forKey: "ry")
-        rotation.z = aDecoder.decodeFloat(forKey: "rz")
-        rotation.w = aDecoder.decodeFloat(forKey: "rw")
-        
+        position = SCNVector3(coder: aDecoder)!
+        rotation = SCNVector4(coder: aDecoder)!
         super.init()
     }
     
     func encode(with aCoder: NSCoder) {
-        aCoder.encode(position.x, forKey: "x")
-        aCoder.encode(position.y, forKey: "y")
-        aCoder.encode(position.z, forKey: "z")
-        aCoder.encode(rotation.x, forKey: "rx")
-        aCoder.encode(rotation.y, forKey: "ry")
-        aCoder.encode(rotation.z, forKey: "rz")
-        aCoder.encode(rotation.w, forKey: "rw")
+        position.encode(with: aCoder)
+        rotation.encode(with: aCoder)
     }
 }
 
@@ -76,31 +81,20 @@ class ShapeDocument: UIDocument {
     // MARK: - Types
     
     enum Shape: Int {
-        case sphere
-        case cube
-        case cylinder
-        case cone
-        case torus
-        case pyramid
+        case sphere, cube, cylinder, cone, torus, pyramid
         
         var color: UIColor {
             switch self {
-                
             case .sphere:
                 return UIColor(red: 253/255, green: 61/255, blue: 57/255, alpha: 1)
-                
             case .cube:
                 return UIColor(red: 60/255, green: 171/255, blue: 219/255, alpha: 1)
-                
             case .cylinder:
                 return UIColor(red: 83/255, green: 216/255, blue: 106/255, alpha: 1)
-                
             case .cone:
                 return UIColor(red: 89/255, green: 91/255, blue: 212/255, alpha: 1)
-                
             case .torus:
                 return UIColor(red: 255/255, green: 204/255, blue: 0/255, alpha: 1)
-                
             case .pyramid:
                 return UIColor(red: 254/255, green: 149/255, blue: 38/255, alpha: 1)
             }
@@ -110,19 +104,14 @@ class ShapeDocument: UIDocument {
             switch self {
             case .sphere:
                 return SCNSphere(radius: 1)
-                
             case .cube:
                 return SCNBox(width: 2, height: 2, length: 2, chamferRadius: 0.1)
-                
             case .cylinder:
                 return SCNCylinder(radius: 0.75, height: 2)
-                
             case .cone:
                 return SCNCone(topRadius: 0.5, bottomRadius: 1.5, height: 1.5)
-                
             case .torus:
                 return SCNTorus(ringRadius: 1.0, pipeRadius: 0.2)
-                
             case .pyramid:
                 return SCNPyramid(width: 1.5, height: 1.5, length: 1.5)
             }
