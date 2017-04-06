@@ -103,7 +103,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
                     Perform all animations, and invalidate the thumbnail cache 
                     where necessary.
                 */
-                indexPathsNeedingReload = self.processAnimations(animations, oldResults: self.documents, newResults: results, section: DocumentBrowserController.documentsSection)
+                indexPathsNeedingReload = self.processAnimations(animations, old: self.documents, newResults: results, section: DocumentBrowserController.documentsSection)
 
                 // Save the new results.
                 self.documents = results
@@ -134,7 +134,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
                     Perform all animations, and invalidate the thumbnail cache 
                     where necessary.
                 */
-                indexPathsNeedingReload = self.processAnimations(animations, oldResults: self.recents, newResults: results, section: DocumentBrowserController.recentsSection)
+                indexPathsNeedingReload = self.processAnimations(animations, old: self.recents, newResults: results, section: DocumentBrowserController.recentsSection)
 
                 // Save the results
                 self.recents = results
@@ -148,7 +148,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     // MARK: - Animation Support
 
-    fileprivate func processAnimations<ModelType: ModelObject>(_ animations: [DocumentBrowserAnimation], oldResults: [ModelType], newResults: [ModelType], section: Int) -> [IndexPath] {
+    fileprivate func processAnimations<ModelType: ModelObject>(_ animations: [DocumentBrowserAnimation], old: [ModelType], newResults: [ModelType], section: Int) -> [IndexPath] {
         let collectionView = self.collectionView!
         
         var indexPathsNeedingReload = [IndexPath]()
@@ -165,7 +165,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
                         IndexPath(row: row, section: section)
                     ])
                     
-                    let url = oldResults[row].url
+                    let url = old[row].url
                     self.thumbnailCache.removeThumbnailForURL(url)
                     
                 case .move(let from, let to):
