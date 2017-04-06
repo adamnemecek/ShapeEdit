@@ -222,7 +222,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! DocumentCell
 
-        let document = documentForIndexPath(indexPath)
+        let document = self[indexPath]
         
         cell.title = document.displayName
         cell.subtitle = document.subtitle
@@ -247,16 +247,17 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // Locate the selected document and open it.
 
-        open(documentForIndexPath(indexPath).url)
+        open(self[indexPath].url)
     }
     
     override func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        let document = documentForIndexPath(indexPath)
+
         
         let visibleURLs: [URL] = collectionView.indexPathsForVisibleItems.map { indexPath in
-            documentForIndexPath(indexPath).url
+            self[indexPath].url
         }
         
+        let document = self[indexPath]
         if !visibleURLs.contains(document.url) {
             thumbnailCache.cancelThumbnailLoadForURL(document.url)
         }
@@ -266,21 +267,30 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     // MARK: - Document handling support
         
     fileprivate func documentBrowserModelObjectForURL(_ url: URL) -> DocumentBrowserModelObject? {
-        return documents.index(where: { $0.url == url }).map {
-            self.documents[$0]
-        }
+        return documents.first(by: url)
     }
-
-    fileprivate func documentForIndexPath(_ indexPath: IndexPath) -> ModelObject {
+    
+    fileprivate subscript(indexPath: IndexPath) -> ModelObject {
         if indexPath.section == DocumentBrowserController.recentsSection {
             return recents[indexPath.row]
         }
         else if indexPath.section == DocumentBrowserController.documentsSection {
             return documents[indexPath.row]
         }
-
+        
         fatalError("Unknown section.")
     }
+
+//    fileprivate func documentForIndexPath(_ indexPath: IndexPath) -> ModelObject {
+//        if indexPath.section == DocumentBrowserController.recentsSection {
+//            return recents[indexPath.row]
+//        }
+//        else if indexPath.section == DocumentBrowserController.documentsSection {
+//            return documents[indexPath.row]
+//        }
+//
+//        fatalError("Unknown section.")
+//    }
     
     fileprivate func presentCloudDisabledAlert() {
         OperationQueue.main.addOperation {

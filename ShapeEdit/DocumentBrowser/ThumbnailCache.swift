@@ -41,6 +41,19 @@ extension RangeReplaceableCollection where Iterator.Element : Equatable {
         }
     }
 }
+
+extension Sequence where Iterator.Element : ModelObject {
+    func first(by url: URL) -> Iterator.Element? {
+        return first { $0.url == url }
+    }
+}
+
+extension Collection where Iterator.Element : ModelObject {
+    func index(by url: URL) -> Index? {
+        return index { $0.url == url }
+    }
+}
+
 extension RangeReplaceableCollection where Iterator.Element : ModelObject {
     mutating func remove(by url: URL) -> Index? {
         return index {
