@@ -1,13 +1,27 @@
 /*
-    Copyright (C) 2016 Apple Inc. All Rights Reserved.
-    See LICENSE.txt for this sample’s licensing information
-    
-    Abstract:
-    This is the main Document class which reads and writes our document objects using proper file coordination.
-*/
+ Copyright (C) 2016 Apple Inc. All Rights Reserved.
+ See LICENSE.txt for this sample’s licensing information
+ 
+ Abstract:
+ This is the main Document class which reads and writes our document objects using proper file coordination.
+ */
 
 import UIKit
 import SceneKit
+
+//extension SCNVector3 : NSCoding {
+//    public func encode(with aCoder: NSCoder) {
+//        aCoder.encode(x, forKey: "x")
+//        aCoder.encode(y, forKey: "y")
+//        aCoder.encode(z, forKey: "z")
+//
+//    }
+//
+//    public init?(coder aDecoder: NSCoder) {
+//
+//    }
+//
+//}
 
 /// We save and restore the camera state as an object to be able to use `NSCoding`.
 class CameraState: NSObject, NSCoding {
@@ -54,10 +68,10 @@ class CameraState: NSObject, NSCoding {
 }
 
 /**
-    The `ShapeDocument` is our main document class which manages loading and saving
-    of shape files on disk.  We subclass from `UIDocument` in order to load and 
-    save with proper file coordination handled automatically.
-*/
+ The `ShapeDocument` is our main document class which manages loading and saving
+ of shape files on disk.  We subclass from `UIDocument` in order to load and
+ save with proper file coordination handled automatically.
+ */
 class ShapeDocument: UIDocument {
     // MARK: - Types
     
@@ -68,30 +82,75 @@ class ShapeDocument: UIDocument {
         case cone
         case torus
         case pyramid
+        
+        var color: UIColor {
+            switch self {
+                
+            case .sphere:
+                return UIColor(red: 253/255, green: 61/255, blue: 57/255, alpha: 1)
+                
+            case .cube:
+                return UIColor(red: 60/255, green: 171/255, blue: 219/255, alpha: 1)
+                
+            case .cylinder:
+                return UIColor(red: 83/255, green: 216/255, blue: 106/255, alpha: 1)
+                
+            case .cone:
+                return UIColor(red: 89/255, green: 91/255, blue: 212/255, alpha: 1)
+                
+            case .torus:
+                return UIColor(red: 255/255, green: 204/255, blue: 0/255, alpha: 1)
+                
+            case .pyramid:
+                return UIColor(red: 254/255, green: 149/255, blue: 38/255, alpha: 1)
+            }
+        }
+        
+        var geometry : SCNGeometry {
+            switch self {
+            case .sphere:
+                return SCNSphere(radius: 1)
+                
+            case .cube:
+                return SCNBox(width: 2, height: 2, length: 2, chamferRadius: 0.1)
+                
+            case .cylinder:
+                return SCNCylinder(radius: 0.75, height: 2)
+                
+            case .cone:
+                return SCNCone(topRadius: 0.5, bottomRadius: 1.5, height: 1.5)
+                
+            case .torus:
+                return SCNTorus(ringRadius: 1.0, pipeRadius: 0.2)
+                
+            case .pyramid:
+                return SCNPyramid(width: 1.5, height: 1.5, length: 1.5)
+            }
+        }
     }
     
     // MARK: - Declarations
-
+    
     static let shapeKey       = "shape"
     static let cameraStateKey = "cameraState"
-
+    
     // MARK: - Properties
     
     var shape: Shape?
     var cameraState = CameraState()
-
+    
     // MARK: - Document loading override
     
     override func load(fromContents contents: Any, ofType typeName: String?) throws {
         guard let data = contents as? Data else {
             fatalError("Cannot handle contents of type \(contents.self).")
         }
-
+        
         // Our document format is a simple plist.
         guard let plist = try PropertyListSerialization.propertyList(from: data, options: .mutableContainersAndLeaves, format: nil) as? [String: AnyObject] else {
             throw ShapeEditError.plistReadFailed
         }
-
+        
         // The shape is saved as a number corresponding to our enum.
         guard let shapeRawValue = plist[ShapeDocument.shapeKey] as? Int else {
             throw ShapeEditError.noShape
@@ -101,7 +160,7 @@ class ShapeDocument: UIDocument {
         
         // The camera state is saved using NSCoding.
         if let cameraStateData = plist[ShapeDocument.cameraStateKey] as? Data,
-              let cameraState = NSKeyedUnarchiver.unarchiveObject(with: cameraStateData) as? CameraState {
+            let cameraState = NSKeyedUnarchiver.unarchiveObject(with: cameraStateData) as? CameraState {
             self.cameraState = cameraState
         }
         else {
@@ -109,14 +168,14 @@ class ShapeDocument: UIDocument {
             updateChangeCount(.done)
         }
     }
-
+    
     // MARK: - Document Saving Override
-
+    
     override func contents(forType typeName: String) throws -> Any {
         /*
-            Saving the document consists of creating the property list, then 
-            creating an `NSData` object using plist serialization.
-        */
+         Saving the document consists of creating the property list, then
+         creating an `NSData` object using plist serialization.
+         */
         
         let cameraStateData = NSKeyedArchiver.archivedData(withRootObject: cameraState)
         
@@ -128,17 +187,17 @@ class ShapeDocument: UIDocument {
             ShapeDocument.shapeKey: shapeRawValue,
             ShapeDocument.cameraStateKey: cameraStateData
         ]
-
+        
         return try PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0)
     }
-
+    
     override func fileAttributesToWrite(to url: URL, for saveOperation: UIDocumentSaveOperation) throws -> [AnyHashable: Any] {
         let aspectRatio = 220.0 / 270.0
-
+        
         let thumbnailSize = CGSize(width: CGFloat(1024.0 * aspectRatio), height: 1024.0)
-
+        
         let image = renderThumbnailOfSize(thumbnailSize)
-
+        
         return [
             URLResourceKey.hasHiddenExtensionKey: true,
             URLResourceKey.thumbnailDictionaryKey: [
@@ -161,28 +220,7 @@ class ShapeDocument: UIDocument {
     // MARK: - Thumbnail Generation
     
     var color: UIColor {
-        switch shape {
-            case nil:
-                return UIColor.gray
-                
-            case .sphere?:
-                return UIColor(red: 253/255, green: 61/255, blue: 57/255, alpha: 1)
-                
-            case .cube?:
-                return UIColor(red: 60/255, green: 171/255, blue: 219/255, alpha: 1)
-                
-            case .cylinder?:
-                return UIColor(red: 83/255, green: 216/255, blue: 106/255, alpha: 1)
-                
-            case .cone?:
-                return UIColor(red: 89/255, green: 91/255, blue: 212/255, alpha: 1)
-                
-            case .torus?:
-                return UIColor(red: 255/255, green: 204/255, blue: 0/255, alpha: 1)
-                
-            case .pyramid?:
-                return UIColor(red: 254/255, green: 149/255, blue: 38/255, alpha: 1)
-        }
+        return shape?.color ?? .gray
     }
     
     var backgroundColor: UIColor {
@@ -191,30 +229,7 @@ class ShapeDocument: UIDocument {
     
     func setSceneOnRenderer(_ renderer: SCNSceneRenderer) {
         let node: SCNNode
-        let geometry: SCNGeometry
-        
-        switch shape {
-            case nil:
-                geometry = SCNGeometry()
-            
-            case .sphere?:
-                geometry = SCNSphere(radius: 1)
-            
-            case .cube?:
-                geometry = SCNBox(width: 2, height: 2, length: 2, chamferRadius: 0.1)
-            
-            case .cylinder?:
-                geometry = SCNCylinder(radius: 0.75, height: 2)
-            
-            case .cone?:
-                geometry = SCNCone(topRadius: 0.5, bottomRadius: 1.5, height: 1.5)
-            
-            case .torus?:
-                geometry = SCNTorus(ringRadius: 1.0, pipeRadius: 0.2)
-            
-            case .pyramid?:
-                geometry = SCNPyramid(width: 1.5, height: 1.5, length: 1.5)
-        }
+        let geometry: SCNGeometry = shape?.geometry ?? SCNGeometry()
         
         let colorMaterial = SCNMaterial()
         colorMaterial.diffuse.contents = color
@@ -238,7 +253,7 @@ class ShapeDocument: UIDocument {
         ambientLightNode.light = ambientLight
         scene.rootNode.addChildNode(ambientLightNode);
         renderer.scene = scene
-
+        
         renderer.scene = scene
         
         renderer.pointOfView = pov
@@ -246,14 +261,14 @@ class ShapeDocument: UIDocument {
     
     func renderThumbnailOfSize(_ size: CGSize) -> UIImage {
         /*
-            We want to create a thumbnail while running on the background thread.
-            The obvious choice would be to use `SCNView`'s snapshot method, but we
-            have a problem: we don't have an `SCNView`, and we can't create a view
-            while on the background thread. Instead of eagerly creating a view
-            that is only used for snapshotting, we create our own renderer, frame,
-            color and depth buffers, and then render and read the pixels into a
-            `CGImage`.
-        */
+         We want to create a thumbnail while running on the background thread.
+         The obvious choice would be to use `SCNView`'s snapshot method, but we
+         have a problem: we don't have an `SCNView`, and we can't create a view
+         while on the background thread. Instead of eagerly creating a view
+         that is only used for snapshotting, we create our own renderer, frame,
+         color and depth buffers, and then render and read the pixels into a
+         `CGImage`.
+         */
         
         let width = Int(size.width)
         let height = Int(size.height)
@@ -300,7 +315,7 @@ class ShapeDocument: UIDocument {
         glBindRenderbuffer(GLenum(GL_RENDERBUFFER), depthBuffer)
         glRenderbufferStorage(GLenum(GL_RENDERBUFFER), GLenum(GL_DEPTH_COMPONENT24), GLsizei(width), GLsizei(height))
         glFramebufferRenderbuffer(GLenum(GL_FRAMEBUFFER), GLenum(GL_DEPTH_ATTACHMENT), GLenum(GL_RENDERBUFFER), depthBuffer)
-
+        
         // Set the background color.
         var red: CGFloat = 0
         var green: CGFloat = 0
