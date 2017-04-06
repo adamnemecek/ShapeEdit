@@ -24,7 +24,7 @@ protocol RecentModelObjectsManagerDelegate: class {
 class RecentModelObjectsManager: RecentModelObjectDelegate {
     // MARK: - Properties
     
-    var recentModelObjects = [RecentModelObject]()
+    private var content: [RecentModelObject] = []
     
     static let maxRecentModelObjectCount = 3
     
@@ -47,7 +47,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
                 If we already have results, we send them to the delegate as an
                 initial update.
             */
-            delegate?.recentsManagerResultsDidChange(recentModelObjects, animations: [.reload])
+            delegate?.recentsManagerResultsDidChange(content, animations: [.reload])
         }
     }
     
@@ -59,7 +59,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     deinit {
         // Be sure we are no longer listening for file presenter notifications.
-        for recent in recentModelObjects {
+        for recent in content {
             NSFileCoordinator.removeFilePresenter(recent)
         }
     }
@@ -79,7 +79,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
             }
             
             // Remove any existing recents we may have already stored in memory.
-            for recent in self.recentModelObjects {
+            for recent in self.content {
                 NSFileCoordinator.removeFilePresenter(recent)
             }
             
@@ -92,7 +92,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
                 NSFileCoordinator.addFilePresenter(recent)
             }
             
-            self.recentModelObjects = loadedRecents
+            self.content = loadedRecents
             
             // Check if the bookmark data is stale and resave the recents if it is.
             for recent in loadedRecents where recent.bookmarkDataNeedsSave {
@@ -101,13 +101,13 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
             
             OperationQueue.main.addOperation {
                 // Notify our delegate that the initial recents were loaded.
-                self.delegate?.recentsManagerResultsDidChange(self.recentModelObjects, animations: [.reload])
+                self.delegate?.recentsManagerResultsDidChange(self.content, animations: [.reload])
             }
         }
     }
     
     fileprivate func saveRecents() {
-        let recentModels = recentModelObjects.map { recentModelObject in
+        let recentModels = content.map { recentModelObject in
             return NSKeyedArchiver.archivedData(withRootObject: recentModelObject)
         }
         
@@ -116,7 +116,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     // MARK: - Recent List Management
     
-    fileprivate func removeRecentModelObject(_ recent: RecentModelObject) {
+    fileprivate func remove(_ recent: RecentModelObject) {
         // Remove the file presenter so we stop getting notifications on the removed recent.
         NSFileCoordinator.removeFilePresenter(recent)
         
@@ -124,7 +124,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
             Remove the recent from the array and save the recents array to disk
             so they will reflect the correct state when the app is relaunched.
         */
-        guard let _ = recentModelObjects.remove(recent) else { return }
+        guard let _ = content.remove(recent) else { return }
 
         saveRecents()
     }
@@ -136,7 +136,7 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
 
             var animations = [DocumentBrowserAnimation]()
             
-            if let index = self.recentModelObjects.remove(recent) {
+            if let index = self.content.remove(recent) {
                 
                 if index != 0 {
                     animations += [.move(fromIndex: index, toIndex: 0)]
@@ -150,17 +150,17 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
                 animations += [.add(index: 0)]
             }
             
-            self.recentModelObjects.insert(recent, at: 0)
+            self.content.insert(recent, at: 0)
             
             // Prune down the recent documents if there are too many.
-            while self.recentModelObjects.count > RecentModelObjectsManager.maxRecentModelObjectCount {
-                self.removeRecentModelObject(self.recentModelObjects.last!)
+            while self.content.count > RecentModelObjectsManager.maxRecentModelObjectCount {
+                self.remove(self.content.last!)
                 
-                animations += [.delete(index: self.recentModelObjects.count - 1)]
+                animations += [.delete(index: self.content.count - 1)]
             }
             
             OperationQueue.main.addOperation {
-                self.delegate?.recentsManagerResultsDidChange(self.recentModelObjects, animations: animations)
+                self.delegate?.recentsManagerResultsDidChange(self.content, animations: animations)
             }
         
             self.saveRecents()
@@ -171,12 +171,12 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     func recentWasDeleted(_ recent: RecentModelObject) {
         self.workerQueue.addOperation {
-            guard let index = self.recentModelObjects.index(of: recent) else { return }
+            guard let index = self.content.index(of: recent) else { return }
             
-            self.removeRecentModelObject(recent)
+            self.remove(recent)
             
             OperationQueue.main.addOperation {
-                self.delegate?.recentsManagerResultsDidChange(self.recentModelObjects, animations: [
+                self.delegate?.recentsManagerResultsDidChange(self.content, animations: [
                     .delete(index: index)
                 ])
             }
@@ -185,10 +185,10 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     func recentNeedsReload(_ recent: RecentModelObject) {
         self.workerQueue.addOperation {
-            guard let index = self.recentModelObjects.index(of: recent) else { return }
+            guard let index = self.content.index(of: recent) else { return }
             
             OperationQueue.main.addOperation {
-                self.delegate?.recentsManagerResultsDidChange(self.recentModelObjects, animations: [
+                self.delegate?.recentsManagerResultsDidChange(self.content, animations: [
                     .update(index: index)
                 ])
             }
