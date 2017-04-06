@@ -39,3 +39,20 @@ extension SCNVector4  {
         w = aDecoder.decodeFloat(forKey: "rw")
     }
 }
+
+
+extension OperationQueue {
+    
+    enum Name : String {
+        case browser = "com.example.apple-samplecode.ShapeEdit.browserdatasource.workerQueue"
+        case coord = "com.example.apple-samplecode.ShapeEdit.documentbrowser.coordinationQueue"
+        case recents =  "com.example.apple-samplecode.ShapeEdit.recentobjectsmanager.workerQueue"
+        case thumbNailCache = "com.example.apple-samplecode.ShapeEdit.thumbnailcache.workerQueue"
+    }
+
+    convenience init(name: Name, count: Int = 1) {
+        self.init()
+        self.name = name.rawValue
+        self.maxConcurrentOperationCount = count
+    }
+}

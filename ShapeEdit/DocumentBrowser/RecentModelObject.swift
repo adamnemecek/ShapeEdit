@@ -68,7 +68,7 @@ class RecentModelObject: NSObject, NSFilePresenter, ModelObject {
     }
 
     var presentedItemOperationQueue: OperationQueue {
-        return OperationQueue.main
+        return .main
     }
     
     deinit {

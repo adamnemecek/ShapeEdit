@@ -30,17 +30,8 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     
     static let recentsKey = "recents"
     
-    fileprivate let workerQueue: OperationQueue = {
-        let coordinationQueue = OperationQueue()
-        
-        coordinationQueue.name = "com.example.apple-samplecode.ShapeEdit.recentobjectsmanager.workerQueue"
-        
-        coordinationQueue.maxConcurrentOperationCount = 1
-        
-        return coordinationQueue
-    }()
+    fileprivate let workerQueue = OperationQueue(name: .recents)
 
-    
     weak var delegate: RecentModelObjectsManagerDelegate? {
         didSet {
             /*

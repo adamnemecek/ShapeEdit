@@ -90,7 +90,7 @@ class ThumbnailCache {
     
     fileprivate let cache = NSCache<NSNumber, UIImage>(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.cache", count: 64)
     
-    fileprivate let workerQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.thumbnailcache.workerQueue")
+    fileprivate let workerQueue = OperationQueue(name: .thumbNailCache)
     
     private let thumbnailSize: CGSize
     

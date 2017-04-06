@@ -31,6 +31,7 @@ class OrderedSet<Element: AnyObject> : NSOrderedSet {
     
 }
 
+
 /**
     The DocumentBrowserQuery wraps an `NSMetadataQuery` to insulate us from the
     queueing and animation concerns. It runs the query and computes animations
@@ -43,15 +44,7 @@ class DocumentBrowserQuery: NSObject {
     
     fileprivate var previousQueryObjects: NSOrderedSet?
     
-    fileprivate let workerQueue: OperationQueue = {
-        let workerQueue = OperationQueue()
-        
-        workerQueue.name = "com.example.apple-samplecode.ShapeEdit.browserdatasource.workerQueue"
-
-        workerQueue.maxConcurrentOperationCount = 1
-        
-        return workerQueue
-    }()
+    fileprivate let workerQueue = OperationQueue(name: .browser)
 
     var delegate: DocumentBrowserQueryDelegate? {
         didSet {

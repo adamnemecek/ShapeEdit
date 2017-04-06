@@ -43,7 +43,7 @@ class DocumentBrowserController: UICollectionViewController, DocumentBrowserQuer
     
     private let thumbnailCache = ThumbnailCache(thumbnailSize: CGSize(width: 220, height: 270))
     
-    fileprivate let coordinationQueue = OperationQueue(name: "com.example.apple-samplecode.ShapeEdit.documentbrowser.coordinationQueue")
+    fileprivate let coordinationQueue = OperationQueue(name: .coord)
     
     // MARK: - View Controller Override
     
