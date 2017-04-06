@@ -98,8 +98,8 @@ class RecentModelObjectsManager: RecentModelObjectDelegate {
     }
     
     fileprivate func saveRecents() {
-        let recentModels = content.map { recentModelObject in
-            return NSKeyedArchiver.archivedData(withRootObject: recentModelObject)
+        let recentModels = content.map {
+            NSKeyedArchiver.archivedData(withRootObject: $0)
         }
         
         UserDefaults.standard.set(recentModels, forKey: RecentModelObjectsManager.recentsKey)
